@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سباق الدراغ: كراون فيكتوريا ضد كابرس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Cairo:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="racing.css">
+</head>
+<body>
+
+<canvas id="track"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="tree-wrap">
+    <div id="tree">
+      <div class="bulb pre" data-b="pre"></div>
+      <div class="bulb stage" data-b="stage"></div>
+      <div class="bulb amber" data-b="a1"></div>
+      <div class="bulb amber" data-b="a2"></div>
+      <div class="bulb amber" data-b="a3"></div>
+      <div class="bulb green" data-b="green"></div>
+      <div class="bulb red" data-b="red"></div>
+    </div>
+  </div>
+
+  <div id="player-gauge" class="gauge-panel">
+    <div class="car-tag" id="player-tag">--</div>
+    <div class="rpm-track"><div id="rpm-fill" class="rpm-fill"></div><div class="rpm-redzone"></div></div>
+    <div class="gauge-row">
+      <div class="gauge-stat"><span id="gear-num">1</span><label>الجير</label></div>
+      <div class="gauge-stat"><span id="speed-num">0</span><label>كم/س</label></div>
+      <div class="gauge-stat"><span id="rpm-num">0</span><label>RPM</label></div>
+    </div>
+    <div id="spin-warning" class="hidden">🌀 دوران إطارات</div>
+  </div>
+
+  <div id="progress-panel">
+    <div class="progress-row">
+      <span class="progress-name" id="p1-name">أنت</span>
+      <div class="progress-track"><div id="p1-progress" class="progress-fill mine"></div></div>
+    </div>
+    <div class="progress-row">
+      <span class="progress-name" id="p2-name">الخصم</span>
+      <div class="progress-track"><div id="p2-progress" class="progress-fill rival"></div></div>
+    </div>
+  </div>
+
+  <div id="controls-hint">اضغط <b>مسافة</b> للبنزين &nbsp;•&nbsp; <b>↑</b> ترس أعلى &nbsp;•&nbsp; <b>↓</b> ترس أدنى</div>
+</div>
+
+<div id="selectScreen" class="overlay">
+  <div class="panel wide">
+    <h1>🏁 سباق الدراغ</h1>
+    <p class="subtitle">فورد كراون فيكتوريا 2011 ضد شيفروليه كابرس 2006 V8 — ربع ميل، خط مستقيم، من يفوز؟</p>
+
+    <div class="car-select-grid">
+      <button class="car-card" data-car="crownvic">
+        <div class="car-preview cv-preview"><div class="mini-car cv"></div></div>
+        <h3>فورد كراون فيكتوريا 2011</h3>
+        <div class="spec-list">
+          <div class="spec"><label>المحرك</label><span>V8 4.6 لتر</span></div>
+          <div class="spec"><label>القوة</label><span>250 حصان</span></div>
+          <div class="spec"><label>العزم</label><span>403 نيوتن.م</span></div>
+          <div class="spec"><label>الوزن</label><span>1955 كجم</span></div>
+          <div class="spec"><label>الدفع</label><span>خلفي، ناقل أوتوماتيك 4 سرعات</span></div>
+        </div>
+        <div class="pick-label">اختر الفورد</div>
+      </button>
+
+      <div class="vs-divider">VS</div>
+
+      <button class="car-card" data-car="caprice">
+        <div class="car-preview cp-preview"><div class="mini-car cp"></div></div>
+        <h3>شيفروليه كابرس 2006</h3>
+        <div class="spec-list">
+          <div class="spec"><label>المحرك</label><span>V8 6.0 لتر LS2</span></div>
+          <div class="spec"><label>القوة</label><span>362 حصان</span></div>
+          <div class="spec"><label>العزم</label><span>530 نيوتن.م</span></div>
+          <div class="spec"><label>الوزن</label><span>1850 كجم</span></div>
+          <div class="spec"><label>الدفع</label><span>خلفي، ناقل أوتوماتيك 4 سرعات</span></div>
+        </div>
+        <div class="pick-label">اختر الكابرس</div>
+      </button>
+    </div>
+
+    <p class="approx-note">* الأرقام تقريبية مبنية على مواصفات متداولة للسيارتين، وتُستخدم هنا لمحاكاة فرق أداء واقعي بينهما.</p>
+
+    <div class="controls-hint static">
+      <b>البداية:</b> راقب أضواء الشجرة وانطلق عند الأخضر فقط (الانطلاق المبكر = خسارة فورية)<br>
+      <b>أثناء السباق:</b> ثبّت <b>مسافة</b> للبنزين، وبدّل التروس بـ<b>↑</b> قرب الحد الأقصى للدوران — الفوات يفقدك القوة
+    </div>
+  </div>
+</div>
+
+<div id="resultScreen" class="overlay hidden">
+  <div class="panel">
+    <h1 id="result-title">النتيجة</h1>
+    <div class="result-grid">
+      <div class="result-col">
+        <div class="result-car-name" id="res-p1-name">أنت</div>
+        <div class="result-stat"><label>زمن الإنهاء (ET)</label><span id="res-p1-et">--</span></div>
+        <div class="result-stat"><label>سرعة الخط (Trap)</label><span id="res-p1-trap">--</span></div>
+        <div class="result-stat"><label>زمن رد الفعل</label><span id="res-p1-rt">--</span></div>
+      </div>
+      <div class="result-col">
+        <div class="result-car-name" id="res-p2-name">الخصم</div>
+        <div class="result-stat"><label>زمن الإنهاء (ET)</label><span id="res-p2-et">--</span></div>
+        <div class="result-stat"><label>سرعة الخط (Trap)</label><span id="res-p2-trap">--</span></div>
+        <div class="result-stat"><label>زمن رد الفعل</label><span id="res-p2-rt">--</span></div>
+      </div>
+    </div>
+    <div class="result-buttons">
+      <button id="rematchBtn">أعد السباق بنفس السيارة</button>
+      <button id="changeCarBtn" class="secondary">اختر سيارة أخرى</button>
+    </div>
+  </div>
+</div>
+
+<script src="racing.js"></script>
+</body>
+</html>

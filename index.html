@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>صياد البرية</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="hud-top-left">
+      <div class="bar-label">الصحة</div>
+      <div class="bar-track"><div id="health-fill" class="bar-fill health"></div></div>
+      <div class="bar-label">التخفي / الجري</div>
+      <div class="bar-track"><div id="stamina-fill" class="bar-fill stamina"></div></div>
+      <div id="stance-label">وضعية: عادية</div>
+    </div>
+
+    <div id="hud-top-right">
+      <div id="weapon-name">🏹 القوس</div>
+      <div id="ammo-count">السهام: 10</div>
+      <div id="traps-count">الفخاخ: 5</div>
+    </div>
+
+    <div id="hud-top-center">
+      <div id="score">النقاط: 0</div>
+      <div id="coins">🪙 0</div>
+    </div>
+
+    <div id="interact-hint" class="hidden"></div>
+    <div id="notice-banner" class="hidden"></div>
+  </div>
+
+  <div id="startScreen" class="overlay">
+    <div class="panel">
+      <h1>🦁 صياد البرية</h1>
+      <p class="subtitle">تتبّع، تخفّى، واصطد حيوانات السافانا — من الأرنب الصغير إلى الأسد الخطير</p>
+
+      <div class="method-grid">
+        <div class="method-card">
+          <div class="method-icon">🐾</div>
+          <h3>التتبّع والتخفي</h3>
+          <p>تحرّك بهدوء (اضغط <b>Ctrl</b>) لتقليل الضوضاء والاقتراب دون أن يشعر بك الحيوان. الجري (<b>Shift</b>) أسرع لكنه يفضحك.</p>
+        </div>
+        <div class="method-card">
+          <div class="method-icon">🎯</div>
+          <h3>التصويب والرمي</h3>
+          <p>اختر <b>القوس (1)</b> الصامت أو <b>البندقية (2)</b> القوية والصاخبة، صوّب بالماوس واضغط زر الفأرة لإطلاق النار.</p>
+        </div>
+        <div class="method-card">
+          <div class="method-icon">🪤</div>
+          <h3>الفخاخ</h3>
+          <p>اختر <b>الفخ (3)</b> وضعه على الأرض لاصطياد الحيوانات الصغيرة تلقائيًا. عد لاحقًا واضغط <b>E</b> لجمعه.</p>
+        </div>
+      </div>
+
+      <div class="controls-hint">
+        <b>الحركة:</b> WASD / الأسهم &nbsp;•&nbsp; <b>تصويب:</b> الماوس &nbsp;•&nbsp; <b>إطلاق/وضع فخ:</b> زر الفأرة الأيسر<br>
+        <b>تخفي:</b> Ctrl &nbsp;•&nbsp; <b>جري:</b> Shift &nbsp;•&nbsp; <b>إعادة تعبئة:</b> R &nbsp;•&nbsp; <b>تفاعل:</b> E &nbsp;•&nbsp; <b>إيقاف مؤقت:</b> Esc
+      </div>
+
+      <button id="startBtn">ابدأ الصيد</button>
+    </div>
+  </div>
+
+  <div id="pauseScreen" class="overlay hidden">
+    <div class="panel">
+      <h1>إيقاف مؤقت</h1>
+      <button id="resumeBtn">متابعة</button>
+    </div>
+  </div>
+
+  <div id="gameOverScreen" class="overlay hidden">
+    <div class="panel">
+      <h1 id="gameOverTitle">انتهت الرحلة</h1>
+      <p id="gameOverStats"></p>
+      <button id="restartBtn">حاول مجددًا</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
