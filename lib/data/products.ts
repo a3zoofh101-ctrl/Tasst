@@ -15,11 +15,7 @@ export const products: Product[] = [
     },
     gender: "men",
     concentration: { ar: "أو دو بارفان", en: "Eau de Parfum" },
-    images: [
-      "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1587017539504-67cfbddac569?auto=format&fit=crop&w=1200&q=80"
-    ],
+    images: ["/products/london.webp"],
     sizes: [
       { ml: 50, price: 249, compareAtPrice: 299, sku: "LDN-50" },
       { ml: 100, price: 369, compareAtPrice: 439, sku: "LDN-100" }
@@ -102,11 +98,7 @@ export const products: Product[] = [
     },
     gender: "unisex",
     concentration: { ar: "أو دو تواليت", en: "Eau de Toilette" },
-    images: [
-      "https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1615368144592-05c8f9e1b6c1?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1600612253971-422e7f7faeb6?auto=format&fit=crop&w=1200&q=80"
-    ],
+    images: ["/products/miami.webp"],
     sizes: [
       { ml: 50, price: 199, compareAtPrice: 239, sku: "MIA-50" },
       { ml: 100, price: 299, compareAtPrice: 359, sku: "MIA-100" }
