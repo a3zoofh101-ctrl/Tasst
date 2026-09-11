@@ -11,7 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $result = attempt_login($pdo, $email, $password);
-    if ($result === false) {
+    if ($result === 'locked') {
+        $error = 'تم إيقاف تسجيل الدخول مؤقتاً بسبب محاولات كثيرة فاشلة. الرجاء المحاولة بعد ' . LOGIN_LOCKOUT_MINUTES . ' دقيقة.';
+    } elseif ($result === false) {
         $error = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
     } elseif ($result === 'banned') {
         $error = 'تم إيقاف هذا الحساب. تواصل مع الدعم الفني.';

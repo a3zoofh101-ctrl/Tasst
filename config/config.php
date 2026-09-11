@@ -5,6 +5,21 @@
  */
 
 // ---------------------------------------------------------------
+// Environment — set APP_ENV=development on your local/staging machine
+// to see PHP errors on screen. Leave as "production" on the live site.
+// ---------------------------------------------------------------
+define('APP_ENV', getenv('APP_ENV') ?: 'production');
+
+if (APP_ENV === 'development') {
+    ini_set('display_errors', '1');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '0');
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
+}
+ini_set('log_errors', '1');
+
+// ---------------------------------------------------------------
 // Database credentials — EDIT THESE for your hosting (cPanel etc.)
 // ---------------------------------------------------------------
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
@@ -13,9 +28,10 @@ define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 
 // Base URL of the site (no trailing slash). Used for building absolute links (e.g. payment callbacks).
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
 define('BASE_URL', rtrim(getenv('BASE_URL') ?: (
-    (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https://' : 'http://') .
-    ($_SERVER['HTTP_HOST'] ?? 'localhost')
+    ($isHttps ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? 'localhost')
 ), '/'));
 
 // ---------------------------------------------------------------
@@ -27,6 +43,7 @@ if (session_status() === PHP_SESSION_NONE) {
         'path' => '/',
         'httponly' => true,
         'samesite' => 'Lax',
+        'secure' => $isHttps,
     ]);
     session_start();
 }

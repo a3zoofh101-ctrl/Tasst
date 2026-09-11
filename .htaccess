@@ -8,6 +8,16 @@ Options -Indexes
     Require all denied
 </FilesMatch>
 
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Uncomment the two lines below once your SSL certificate is active
+    # to force HTTPS on the whole site (recommended before going live):
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
