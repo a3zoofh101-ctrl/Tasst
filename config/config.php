@@ -23,6 +23,7 @@ ini_set('log_errors', '1');
 // Database credentials — EDIT THESE for your hosting (cPanel etc.)
 // ---------------------------------------------------------------
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_PORT', getenv('DB_PORT') ?: '3306'); // MAMP on Mac typically uses 8889
 define('DB_NAME', getenv('DB_NAME') ?: 'smm_panel');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
@@ -55,7 +56,7 @@ date_default_timezone_set('Asia/Riyadh');
 // ---------------------------------------------------------------
 try {
     $pdo = new PDO(
-        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+        'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4',
         DB_USER,
         DB_PASS,
         [
