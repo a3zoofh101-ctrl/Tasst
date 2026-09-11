@@ -23,7 +23,7 @@ export const nationalDayCampaign: CampaignConfig = {
   discountPercent: 30,
   promoCode: "SA95",
   endsAt: "2026-09-23T23:59:59+03:00",
-  productIds: ["p-london", "p-miami", "p-riyadh"],
+  productIds: ["p-london", "p-miami", "p-tokyo"],
   theme: {
     primary: "#0B5D3B",
     accent: "#B08B4F"

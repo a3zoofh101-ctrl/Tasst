@@ -79,7 +79,7 @@ export default function SearchOverlay({
               <div>
                 <p className="eyebrow mb-3">{dict.searchBar.recent}</p>
                 <div className="flex flex-wrap gap-2">
-                  {["London", "Tokyo", "Miami", "Riyadh"].map((s) => (
+                  {["London", "Tokyo", "Miami", "Paris"].map((s) => (
                     <button
                       key={s}
                       onClick={() => setQuery(s)}

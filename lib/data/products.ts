@@ -55,11 +55,7 @@ export const products: Product[] = [
     },
     gender: "women",
     concentration: { ar: "أو دو بارفان", en: "Eau de Parfum" },
-    images: [
-      "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1610461888750-10bfc601b874?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1595425964272-3ee1b3d0e5b8?auto=format&fit=crop&w=1200&q=80"
-    ],
+    images: ["/products/tokyo.webp"],
     sizes: [
       { ml: 50, price: 229, compareAtPrice: 269, sku: "TKY-50" },
       { ml: 100, price: 339, compareAtPrice: 399, sku: "TKY-100" }
@@ -137,10 +133,7 @@ export const products: Product[] = [
     },
     gender: "women",
     concentration: { ar: "أو دو بارفان", en: "Eau de Parfum" },
-    images: [
-      "https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80"
-    ],
+    images: ["/products/paris.webp"],
     sizes: [
       { ml: 50, price: 259, compareAtPrice: 309, sku: "PAR-50" },
       { ml: 100, price: 379, sku: "PAR-100" }
@@ -156,72 +149,6 @@ export const products: Product[] = [
     reviewCount: 98,
     inStock: true
   },
-  {
-    id: "p-riyadh",
-    slug: "riyadh",
-    name: { ar: "الرياض", en: "Riyadh" },
-    tagline: {
-      ar: "عراقة عربية بحلة عصرية",
-      en: "Arabian heritage, modern edge"
-    },
-    description: {
-      ar: "الرياض عطر رجالي فاخر يحتفي بالتراث العربي الأصيل؛ عود ثمين وزعفران دافئ يمتزجان بالعنبر الفاخر في تركيبة تعكس عراقة المكان وعصرية الحاضر.",
-      en: "Riyadh is a luxurious masculine fragrance celebrating authentic Arabian heritage; precious oud and warm saffron blend with fine amber in a composition that reflects both heritage and modern presence."
-    },
-    gender: "men",
-    concentration: { ar: "برفان", en: "Parfum" },
-    images: [
-      "https://images.unsplash.com/photo-1615572968247-2af0e6f6b0c9?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1587017539504-67cfbddac569?auto=format&fit=crop&w=1200&q=80"
-    ],
-    sizes: [
-      { ml: 50, price: 289, compareAtPrice: 339, sku: "RUH-50" },
-      { ml: 100, price: 419, compareAtPrice: 499, sku: "RUH-100" }
-    ],
-    notes: {
-      top: [{ ar: "زعفران", en: "Saffron" }, { ar: "هيل", en: "Cardamom" }],
-      heart: [{ ar: "عود كمبودي", en: "Cambodian Oud" }, { ar: "ورد طائفي", en: "Taif Rose" }],
-      base: [{ ar: "عنبر", en: "Amber" }, { ar: "مسك أبيض", en: "White Musk" }]
-    },
-    tags: ["bestseller", "national-day", "limited"],
-    collection: "heritage",
-    rating: 4.9,
-    reviewCount: 276,
-    inStock: true
-  },
-  {
-    id: "p-dubai",
-    slug: "dubai",
-    name: { ar: "دبي", en: "Dubai" },
-    tagline: {
-      ar: "بريق فاخر بين الرمال والذهب",
-      en: "Opulent shimmer between sand and gold"
-    },
-    description: {
-      ar: "دبي عطر للجنسين يجمع بين الفخامة والحداثة؛ نفحات حمضية ذهبية تنساب نحو قلب من الياسمين والعنبر، لتترك أثرًا لامعًا يليق بأفق المدينة الذهبي.",
-      en: "Dubai is a unisex fragrance combining opulence and modernity; golden citrus notes flow into a jasmine and amber heart, leaving a shimmering trail worthy of the city's golden skyline."
-    },
-    gender: "unisex",
-    concentration: { ar: "أو دو بارفان", en: "Eau de Parfum" },
-    images: [
-      "https://images.unsplash.com/photo-1615368144592-05c8f9e1b6c1?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1600612253971-422e7f7faeb6?auto=format&fit=crop&w=1200&q=80"
-    ],
-    sizes: [
-      { ml: 50, price: 259, compareAtPrice: 299, sku: "DXB-50" },
-      { ml: 100, price: 389, compareAtPrice: 459, sku: "DXB-100" }
-    ],
-    notes: {
-      top: [{ ar: "حمضيات ذهبية", en: "Golden Citrus" }, { ar: "خوخ", en: "Peach" }],
-      heart: [{ ar: "ياسمين", en: "Jasmine" }, { ar: "زهر البرتقال", en: "Orange Blossom" }],
-      base: [{ ar: "عنبر", en: "Amber" }, { ar: "خشب الصندل", en: "Sandalwood" }]
-    },
-    tags: ["offer"],
-    collection: "city-icons",
-    rating: 4.5,
-    reviewCount: 121,
-    inStock: true
-  }
 ];
 
 export function getProductBySlug(slug: string): Product | undefined {

@@ -60,18 +60,6 @@ export const reviews: Review[] = [
       en: "Super refreshing and perfect for summer — became my go-to travel fragrance."
     },
     verified: true
-  },
-  {
-    id: "r6",
-    productId: "p-riyadh",
-    name: { ar: "منيرة الشمري", en: "Muneera Al-Shammari" },
-    rating: 5,
-    date: "2026-09-02",
-    comment: {
-      ar: "عود فخم وأصيل، إهداء رائع لأبوي بمناسبة اليوم الوطني.",
-      en: "Rich, authentic oud — a wonderful National Day gift for my father."
-    },
-    verified: true
   }
 ];
 
