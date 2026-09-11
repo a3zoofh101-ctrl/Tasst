@@ -1,0 +1,184 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #16281c;
+  font-family: "Tahoma", "Segoe UI", system-ui, sans-serif;
+  color: #f2ead6;
+}
+
+#game {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  background: #3a5a34;
+  cursor: crosshair;
+}
+
+.hidden { display: none !important; }
+
+/* HUD */
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+#hud-top-left {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 220px;
+  background: rgba(10, 20, 12, 0.55);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+#hud-top-right {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(10, 20, 12, 0.55);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+#hud-top-center {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 20, 12, 0.55);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 8px 18px;
+  display: flex;
+  gap: 18px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.bar-label { font-size: 12px; margin-bottom: 3px; opacity: 0.85; }
+.bar-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.bar-fill { height: 100%; width: 100%; transition: width 0.15s linear, background 0.2s; }
+.bar-fill.health { background: linear-gradient(90deg,#c0392b,#e74c3c); }
+.bar-fill.stamina { background: linear-gradient(90deg,#2e86de,#54a0ff); }
+.bar-fill.stamina.sneak { background: linear-gradient(90deg,#27ae60,#2ecc71); }
+.bar-fill.stamina.run { background: linear-gradient(90deg,#e1b12c,#fbc531); }
+
+#stance-label { font-size: 12px; opacity: 0.9; }
+
+#interact-hint {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+#notice-banner {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,220,120,0.5);
+  color: #ffe9a8;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: opacity 0.4s;
+}
+
+/* Overlays */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 12, 8, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.panel {
+  max-width: 720px;
+  width: 92%;
+  background: #1d2f22;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 30px 34px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.panel h1 { margin: 0 0 6px; font-size: 28px; }
+.subtitle { opacity: 0.85; margin-bottom: 20px; }
+
+.method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+@media (max-width: 620px) {
+  .method-grid { grid-template-columns: 1fr; }
+}
+
+.method-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: right;
+}
+.method-icon { font-size: 26px; margin-bottom: 4px; }
+.method-card h3 { margin: 4px 0; font-size: 15px; }
+.method-card p { margin: 0; font-size: 12.5px; line-height: 1.5; opacity: 0.9; }
+
+.controls-hint {
+  font-size: 13px;
+  opacity: 0.85;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  background: rgba(0,0,0,0.25);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+button {
+  background: linear-gradient(180deg,#e1b12c,#c9971d);
+  border: none;
+  color: #24160a;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 12px 32px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+button:active { transform: translateY(1px); }
