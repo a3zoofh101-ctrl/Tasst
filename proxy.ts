@@ -3,8 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 const locales = ["ar", "en"];
 const defaultLocale = "ar";
 
+const standaloneRoutes = ["/moqnaas"];
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const isStandalone = standaloneRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+  if (isStandalone) return;
 
   const pathnameHasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
