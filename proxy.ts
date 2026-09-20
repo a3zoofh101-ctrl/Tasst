@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const locales = ["ar", "en"];
 const defaultLocale = "ar";
 
-const standaloneRoutes = ["/moqnaas"];
+const standaloneRoutes = ["/moqnaas", "/baladiya"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
