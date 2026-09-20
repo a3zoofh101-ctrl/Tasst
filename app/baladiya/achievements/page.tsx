@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { municipality } from "@/lib/data/municipality";
 import { projectShowcase } from "@/lib/data/projectShowcase";
+import { achievementsGallery } from "@/lib/data/achievementsGallery";
 import SectionDetail from "@/components/baladiya/SectionDetail";
 import ProjectShowcase from "@/components/baladiya/ProjectShowcase";
+import AchievementsGallery from "@/components/baladiya/AchievementsGallery";
 
 const section = municipality.sections.find((s) => s.id === "achievements")!;
 
@@ -14,6 +16,7 @@ export default function AchievementsPage() {
       {projectShowcase.map((item) => (
         <ProjectShowcase key={item.id} item={item} />
       ))}
+      <AchievementsGallery photos={achievementsGallery} />
     </SectionDetail>
   );
 }
