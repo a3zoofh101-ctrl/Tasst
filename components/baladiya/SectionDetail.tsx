@@ -4,7 +4,13 @@ import PageHero from "./PageHero";
 import StatCard from "./StatCard";
 import { IconCheck } from "./icons";
 
-export default function SectionDetail({ section }: { section: MunicipalitySection }) {
+export default function SectionDetail({
+  section,
+  children
+}: {
+  section: MunicipalitySection;
+  children?: React.ReactNode;
+}) {
   const otherSections = municipality.sections.filter((s) => s.id !== section.id);
 
   return (
@@ -43,7 +49,9 @@ export default function SectionDetail({ section }: { section: MunicipalitySectio
         </div>
       </section>
 
-      <section className="section-y bg-white/60">
+      {children}
+
+      <section className="section-y">
         <div className="mx-auto w-full max-w-[1300px] px-4 sm:px-6 lg:px-8">
           <h2 className="text-xl font-extrabold text-emerald-950 sm:text-2xl">محاور أخرى من التقرير</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
