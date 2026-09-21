@@ -8,12 +8,13 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-x-0 -top-32 -z-10 h-96 bg-[radial-gradient(60%_60%_at_50%_0%,theme(colors.brand.100),transparent)] dark:bg-[radial-gradient(60%_60%_at_50%_0%,theme(colors.brand.900),transparent)]" />
 
       <div className="mx-auto max-w-3xl text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border2 bg-surface px-3.5 py-1.5 text-xs font-semibold text-brand-600">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-xs font-semibold text-brand-700 dark:border-brand-800 dark:bg-brand-900/40 dark:text-brand-200">
           <Zap className="size-3.5" /> منصة عربية لإدارة خدمات التسويق الرقمي
         </span>
 
         <h1 className="mt-6 text-3xl font-extrabold leading-tight text-fg sm:text-5xl">
-          كل خدماتك الرقمية <span className="text-brand-600">من مكان واحد</span>
+          كل خدماتك الرقمية{" "}
+          <span className="bg-brand-gradient bg-clip-text text-transparent">من مكان واحد</span>
         </h1>
 
         <p className="mx-auto mt-4 max-w-xl text-base text-muted sm:text-lg">

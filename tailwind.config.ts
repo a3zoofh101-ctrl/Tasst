@@ -22,19 +22,27 @@ const config: Config = {
         line: "#E4DACB",
 
         // Tasst SMM platform design tokens (namespaced separately from the
-        // perfume-store palette above; only used under app/(smm)).
+        // perfume-store palette above; only used under app/(smm)). A
+        // custom violet — not stock Tailwind indigo — paired with a "spark"
+        // fuchsia used sparingly for gradients/glow on the brand mark and
+        // primary CTAs, to read as social/growth rather than generic SaaS.
         brand: {
-          50: "#EEF2FF",
-          100: "#E0E7FF",
-          200: "#C7D2FE",
-          300: "#A5B4FC",
-          400: "#818CF8",
-          500: "#6366F1",
-          600: "#4F46E5",
-          700: "#4338CA",
-          800: "#3730A3",
-          900: "#312E81",
-          DEFAULT: "#4F46E5"
+          50: "#F3EEFF",
+          100: "#E7DCFF",
+          200: "#CDB8FF",
+          300: "#AE8AFF",
+          400: "#9160FF",
+          500: "#7A3CF5",
+          600: "#6423E0",
+          700: "#5119B8",
+          800: "#3F1390",
+          900: "#2E0D6B",
+          DEFAULT: "#6423E0"
+        },
+        spark: {
+          DEFAULT: "#F0338B",
+          light: "#FF6FB3",
+          dark: "#B81667"
         },
         accent: {
           DEFAULT: "#F5A524",
@@ -59,7 +67,12 @@ const config: Config = {
       },
       boxShadow: {
         card: "0 10px 30px -12px rgba(25,20,16,0.18)",
-        gold: "0 8px 24px -8px rgba(176,139,79,0.45)"
+        gold: "0 8px 24px -8px rgba(176,139,79,0.45)",
+        glow: "0 8px 24px -8px rgba(100,35,224,0.45)",
+        glowLg: "0 16px 44px -12px rgba(100,35,224,0.55)"
+      },
+      backgroundImage: {
+        "brand-gradient": "linear-gradient(135deg, #6423E0 0%, #F0338B 100%)"
       },
       keyframes: {
         fadeUp: {

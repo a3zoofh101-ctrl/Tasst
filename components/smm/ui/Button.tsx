@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 
 const variants = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-600/20",
+  primary: "bg-brand-gradient text-white shadow-glow hover:shadow-glowLg hover:brightness-105",
   secondary: "bg-surface2 text-fg border border-border2 hover:bg-border2/60",
   outline: "border border-border2 text-fg hover:bg-surface2",
   ghost: "text-fg hover:bg-surface2",
@@ -30,7 +30,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]",
+          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]",
           variants[variant],
           sizes[size],
           className

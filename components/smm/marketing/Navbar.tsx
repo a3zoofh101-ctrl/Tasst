@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/smm/ui/Button";
 import { ThemeToggle } from "@/components/smm/ui/ThemeToggle";
+import { Logo } from "@/components/smm/ui/Logo";
 
 const LINKS = [
   { href: "#how-it-works", label: "كيف تعمل المنصة" },
@@ -19,12 +20,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border2 bg-surface/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
-        <Link href="/smm" className="flex items-center gap-2">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-brand-600 text-white">
-            <Sparkles className="size-5" />
-          </span>
-          <span className="text-lg font-extrabold text-fg">تَسّت</span>
-        </Link>
+        <Logo />
 
         <nav className="hidden items-center gap-6 lg:flex">
           {LINKS.map((l) => (

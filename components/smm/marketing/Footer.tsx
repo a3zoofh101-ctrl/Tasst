@@ -1,19 +1,14 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Logo } from "@/components/smm/ui/Logo";
 
 export function Footer() {
   return (
     <footer className="border-t border-border2 bg-surface px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="text-center sm:text-right">
-            <Link href="/smm" className="flex items-center justify-center gap-2 sm:justify-start">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-                <Sparkles className="size-4" />
-              </span>
-              <span className="text-base font-extrabold text-fg">تَسّت</span>
-            </Link>
-            <p className="mt-2 max-w-xs text-sm text-muted">منصة عربية لطلب وإدارة خدمات التسويق الرقمي والسوشيال ميديا</p>
+          <div className="flex flex-col items-center sm:items-start">
+            <Logo size="sm" />
+            <p className="mt-2 max-w-xs text-center text-sm text-muted sm:text-right">منصة عربية لطلب وإدارة خدمات التسويق الرقمي والسوشيال ميديا</p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted">

@@ -2,21 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { ADMIN_NAV } from "@/components/smm/admin/nav";
+import { Logo } from "@/components/smm/ui/Logo";
 
 export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-l border-border2 bg-surface lg:flex">
-      <Link href="/admin" className="flex items-center gap-2 px-6 py-5">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-brand-600 text-white">
-          <Sparkles className="size-5" />
-        </span>
-        <span className="text-lg font-extrabold text-fg">تَسّت <span className="text-muted font-medium text-sm">إدارة</span></span>
-      </Link>
+      <div className="px-6 py-5">
+        <Logo href="/admin" subtitle="إدارة" />
+      </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto smm-scrollbar px-3">
         {ADMIN_NAV.map((item) => {
