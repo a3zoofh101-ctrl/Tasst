@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Search, Star, Clock, RefreshCw, ArrowUpDown, LayoutGrid } from "lucide-react";
+import { Search, Star, Clock, RefreshCw, ArrowUpDown, ArrowRight, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { formatNumber } from "@/lib/smm/money";
 import { Input, Select } from "@/components/smm/ui/Input";
@@ -71,53 +71,84 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
-        <button
-          onClick={() => {
-            setPlatformId("all");
-            setCategoryId("all");
-          }}
-          className={cn(
-            "flex items-center justify-between gap-2 rounded-xl border bg-surface px-3.5 py-2.5 text-sm font-semibold transition-colors",
-            platformId === "all" ? "border-brand-500 text-brand-700 dark:text-brand-200" : "border-border2 text-fg hover:border-brand-300 dark:hover:border-brand-700"
-          )}
-        >
-          الكل
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white">
-            <LayoutGrid className="size-5" />
-          </span>
-        </button>
-        {platforms.map((p) => (
+      {activePlatform ? (
+        <div className="flex items-center gap-3">
           <button
-            key={p.id}
             onClick={() => {
-              setPlatformId(p.id);
+              setPlatformId("all");
               setCategoryId("all");
             }}
+            aria-label="رجوع لكل المنصات"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border2 bg-surface text-muted transition-colors hover:text-fg"
+          >
+            <ArrowRight className="size-[18px]" />
+          </button>
+          <div className="flex items-center gap-2.5 rounded-xl border border-brand-500 bg-surface px-3.5 py-2.5 text-brand-700 dark:text-brand-200">
+            <PlatformIcon slug={activePlatform.slug} size="sm" />
+            <span className="font-bold">{activePlatform.name}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+          <button
+            onClick={() => {
+              setPlatformId("all");
+              setCategoryId("all");
+            }}
+            className="flex items-center justify-between gap-2 rounded-xl border border-brand-500 bg-surface px-3.5 py-2.5 text-sm font-semibold text-brand-700 transition-colors dark:text-brand-200"
+          >
+            الكل
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white">
+              <LayoutGrid className="size-5" />
+            </span>
+          </button>
+          {platforms.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => {
+                setPlatformId(p.id);
+                setCategoryId("all");
+              }}
+              className="flex items-center justify-between gap-2 rounded-xl border border-border2 bg-surface px-3.5 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-brand-300 dark:hover:border-brand-700"
+            >
+              {p.name}
+              <PlatformIcon slug={p.slug} />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activePlatform && activePlatform.categories.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setCategoryId("all")}
             className={cn(
-              "flex items-center justify-between gap-2 rounded-xl border bg-surface px-3.5 py-2.5 text-sm font-semibold transition-colors",
-              platformId === p.id ? "border-brand-500 text-brand-700 dark:text-brand-200" : "border-border2 text-fg hover:border-brand-300 dark:hover:border-brand-700"
+              "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+              categoryId === "all" ? "bg-brand-600 text-white" : "bg-surface2 text-muted hover:text-fg"
             )}
           >
-            {p.name}
-            <PlatformIcon slug={p.slug} />
+            كل التصنيفات
           </button>
-        ))}
-      </div>
+          {activePlatform.categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setCategoryId(c.id)}
+              className={cn(
+                "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                categoryId === c.id ? "bg-brand-600 text-white" : "bg-surface2 text-muted hover:text-fg"
+              )}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
         <div className="relative">
           <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث عن خدمة..." className="pr-9" />
         </div>
-        <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={!activePlatform} className="sm:w-44">
-          <option value="all">كل التصنيفات</option>
-          {activePlatform?.categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
         <Select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="sm:w-44">
           <option value="name">الاسم (أ-ي)</option>
           <option value="price-asc">السعر: الأقل أولاً</option>
@@ -142,7 +173,7 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
           {filtered.map((s) => {
             const favorited = favoriteOverrides[s.id] ?? s.favorited;
             return (
-              <Card key={s.id} className="flex flex-col p-4">
+              <Card key={s.id} className="flex flex-col p-4 transition-colors hover:border-brand-300 dark:hover:border-brand-700">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2.5">
                     <PlatformIcon slug={s.platformSlug} size="sm" />
@@ -186,7 +217,7 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
                   </div>
                   <Link
                     href={`/dashboard/new-order?serviceId=${s.id}`}
-                    className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+                    className="rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-white shadow-glow transition-shadow hover:shadow-glowLg"
                   >
                     اطلب الآن
                   </Link>
