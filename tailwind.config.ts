@@ -86,12 +86,22 @@ const config: Config = {
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" }
+        },
+        drawerIn: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" }
+        },
+        drawerOut: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(100%)" }
         }
       },
       animation: {
         fadeUp: "fadeUp 0.7s ease-out both",
         fadeIn: "fadeIn 0.6s ease-out both",
-        shimmer: "shimmer 2.5s linear infinite"
+        shimmer: "shimmer 2.5s linear infinite",
+        drawerIn: "drawerIn 0.28s cubic-bezier(0.16,1,0.3,1) both",
+        drawerOut: "drawerOut 0.22s ease-in both"
       }
     }
   },
