@@ -4,6 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
+import { logAudit } from "@/lib/smm/audit";
+import { reclassifyServicePlatforms, type ReclassifyResult } from "@/lib/smm/catalog-import";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -67,4 +69,27 @@ export async function toggleCategoryActiveAction(categoryId: string): Promise<Ac
   revalidatePath("/admin/categories");
   revalidatePath("/dashboard/services");
   return { ok: true };
+}
+
+// One-click fix for a catalog imported before detectPlatform learned
+// Arabic keywords: everything landed under "أخرى" instead of its real
+// platform. Safe to re-run — a no-op once everything's already correct.
+export async function reclassifyPlatformsAction(): Promise<ActionResult & Partial<ReclassifyResult>> {
+  const admin = await requireAdmin();
+
+  const result = await reclassifyServicePlatforms(prisma);
+
+  await logAudit({
+    actorId: admin.id,
+    action: "SERVICES_RECLASSIFIED",
+    entityType: "Service",
+    entityId: "bulk",
+    metadata: result
+  });
+
+  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/services");
+  revalidatePath("/smm");
+
+  return { ok: true, ...result };
 }

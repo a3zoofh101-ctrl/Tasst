@@ -19,23 +19,26 @@ export function slugify(input: string): string {
 // Maps a provider's free-text category/service name to one of our existing
 // platform slugs where possible (so real services land in the same
 // platform tab as the seeded/mock ones), or a new platform on the fly.
+// Real provider catalogs are almost always Arabic-labeled ("سناب شات"، not
+// "snapchat"), so every platform needs its Arabic spelling(s) too — English
+// keywords alone left virtually everything falling through to "أخرى".
 const PLATFORM_KEYWORDS: { slug: string; name: string; keywords: string[] }[] = [
-  { slug: "instagram", name: "إنستغرام", keywords: ["instagram", "insta"] },
-  { slug: "tiktok", name: "تيك توك", keywords: ["tiktok", "tik tok"] },
-  { slug: "youtube", name: "يوتيوب", keywords: ["youtube"] },
-  { slug: "x-twitter", name: "X (تويتر)", keywords: ["twitter", "x/twitter", " x "] },
-  { slug: "snapchat", name: "سناب شات", keywords: ["snapchat", "snap"] },
-  { slug: "telegram", name: "تيليجرام", keywords: ["telegram"] },
-  { slug: "facebook", name: "فيسبوك", keywords: ["facebook", " fb "] },
-  { slug: "linkedin", name: "لينكدإن", keywords: ["linkedin"] },
-  { slug: "spotify", name: "سبوتيفاي", keywords: ["spotify"] },
-  { slug: "twitch", name: "تويتش", keywords: ["twitch"] },
-  { slug: "discord", name: "ديسكورد", keywords: ["discord"] },
-  { slug: "pinterest", name: "بينترست", keywords: ["pinterest"] },
-  { slug: "threads", name: "ثريدز", keywords: ["threads"] },
-  { slug: "whatsapp", name: "واتساب", keywords: ["whatsapp"] },
-  { slug: "reddit", name: "ريديت", keywords: ["reddit"] },
-  { slug: "soundcloud", name: "ساوند كلاود", keywords: ["soundcloud"] }
+  { slug: "instagram", name: "إنستغرام", keywords: ["instagram", "insta", "انستقرام", "انستغرام", "إنستقرام", "إنستغرام", "انستجرام", "انستا"] },
+  { slug: "tiktok", name: "تيك توك", keywords: ["tiktok", "tik tok", "تيك توك", "تيكتوك"] },
+  { slug: "youtube", name: "يوتيوب", keywords: ["youtube", "يوتيوب", "يوتيو"] },
+  { slug: "x-twitter", name: "X (تويتر)", keywords: ["twitter", "x/twitter", " x ", "تويتر", "اكس", "إكس"] },
+  { slug: "snapchat", name: "سناب شات", keywords: ["snapchat", "snap", "سناب شات", "سناب", "سنابشات"] },
+  { slug: "telegram", name: "تيليجرام", keywords: ["telegram", "تيليجرام", "تليجرام", "تليغرام"] },
+  { slug: "facebook", name: "فيسبوك", keywords: ["facebook", " fb ", "فيسبوك", "فيس بوك", "فيس"] },
+  { slug: "linkedin", name: "لينكدإن", keywords: ["linkedin", "لينكدإن", "لينكد ان", "لينكدين"] },
+  { slug: "spotify", name: "سبوتيفاي", keywords: ["spotify", "سبوتيفاي", "سبوتيفاى"] },
+  { slug: "twitch", name: "تويتش", keywords: ["twitch", "تويتش"] },
+  { slug: "discord", name: "ديسكورد", keywords: ["discord", "ديسكورد"] },
+  { slug: "pinterest", name: "بينترست", keywords: ["pinterest", "بينترست", "بينتيرست"] },
+  { slug: "threads", name: "ثريدز", keywords: ["threads", "ثريدز"] },
+  { slug: "whatsapp", name: "واتساب", keywords: ["whatsapp", "واتساب", "واتس اب", "واتس"] },
+  { slug: "reddit", name: "ريديت", keywords: ["reddit", "ريديت"] },
+  { slug: "soundcloud", name: "ساوند كلاود", keywords: ["soundcloud", "ساوند كلاود", "ساوندكلاود"] }
 ];
 
 export function detectPlatform(text: string): { slug: string; name: string } {
@@ -207,4 +210,92 @@ export async function bulkImportProviderCatalog(params: {
   }
 
   return { imported: newServiceRows.length, skipped, total: services.length };
+}
+
+export type ReclassifyResult = { moved: number; total: number };
+
+/**
+ * Re-runs detectPlatform against every already-imported Service (using its
+ * name + the provider's original category text) and moves it to the
+ * platform/category that now matches — for catalogs imported before
+ * detectPlatform knew Arabic keywords, which all landed under "أخرى".
+ * Grouped into one updateMany per (platform, category) pair rather than a
+ * per-service update, so this stays a handful of queries regardless of
+ * how many thousand services need moving.
+ */
+export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<ReclassifyResult> {
+  const services = await prisma.service.findMany({
+    select: {
+      id: true,
+      name: true,
+      platformId: true,
+      categoryId: true,
+      providerService: { select: { providerCategory: true } }
+    }
+  });
+  if (services.length === 0) return { moved: 0, total: 0 };
+
+  const resolved = services.map((s) => {
+    const detected = detectPlatform(`${s.providerService?.providerCategory ?? ""} ${s.name}`);
+    const categoryName = s.providerService?.providerCategory?.trim() || "عام";
+    return { service: s, platformSlug: detected.slug, platformName: detected.name, categoryName, categorySlug: slugify(categoryName) };
+  });
+
+  const distinctPlatforms = new Map<string, string>();
+  for (const r of resolved) distinctPlatforms.set(r.platformSlug, r.platformName);
+
+  let sortOrder = 100;
+  const platformRows = await upsertInBatches([...distinctPlatforms.entries()], 20, ([slug, name]) =>
+    prisma.platform.upsert({
+      where: { slug },
+      update: {},
+      create: { name, slug, sortOrder: sortOrder++ }
+    })
+  );
+  const platformBySlug = new Map(platformRows.map((p) => [p.slug, p]));
+
+  const distinctCategories = new Map<string, { platformId: string; name: string; slug: string }>();
+  for (const r of resolved) {
+    const platformId = platformBySlug.get(r.platformSlug)!.id;
+    const key = `${platformId}:${r.categorySlug}`;
+    if (!distinctCategories.has(key)) distinctCategories.set(key, { platformId, name: r.categoryName, slug: r.categorySlug });
+  }
+
+  const categoryKeys = [...distinctCategories.keys()];
+  const categoryRows = await upsertInBatches(categoryKeys, 20, (key) => {
+    const c = distinctCategories.get(key)!;
+    return prisma.category.upsert({
+      where: { platformId_slug: { platformId: c.platformId, slug: c.slug } },
+      update: {},
+      create: { platformId: c.platformId, name: c.name, slug: c.slug }
+    });
+  });
+  const categoryByKey = new Map(categoryKeys.map((key, i) => [key, categoryRows[i]]));
+
+  const groups = new Map<string, { platformId: string; categoryId: string; ids: string[] }>();
+  let moved = 0;
+  for (const r of resolved) {
+    const platform = platformBySlug.get(r.platformSlug)!;
+    const category = categoryByKey.get(`${platform.id}:${r.categorySlug}`)!;
+    if (r.service.platformId === platform.id && r.service.categoryId === category.id) continue;
+    moved++;
+    const key = `${platform.id}:${category.id}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = { platformId: platform.id, categoryId: category.id, ids: [] };
+      groups.set(key, group);
+    }
+    group.ids.push(r.service.id);
+  }
+
+  for (const group of groups.values()) {
+    for (const batch of chunk(group.ids, CHUNK_SIZE)) {
+      await prisma.service.updateMany({
+        where: { id: { in: batch } },
+        data: { platformId: group.platformId, categoryId: group.categoryId }
+      });
+    }
+  }
+
+  return { moved, total: services.length };
 }

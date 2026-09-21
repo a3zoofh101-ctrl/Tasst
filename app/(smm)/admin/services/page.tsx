@@ -7,6 +7,11 @@ import { EmptyState } from "@/components/smm/ui/States";
 import { ImportServiceDialog } from "@/components/smm/admin/ImportServiceDialog";
 import { EditServiceDialog } from "@/components/smm/admin/EditServiceDialog";
 import { ToggleServiceButton } from "@/components/smm/admin/ToggleServiceButton";
+import { ReclassifyPlatformsButton } from "@/components/smm/admin/ReclassifyPlatformsButton";
+
+// Reclassifying scans every managed service — give the server action more
+// than the platform default before it's cut off on a large catalog.
+export const maxDuration = 300;
 
 export default async function AdminServicesPage() {
   const [services, pendingProviderServices, platforms] = await Promise.all([
@@ -17,9 +22,12 @@ export default async function AdminServicesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold text-fg">الخدمات</h1>
-        <p className="mt-1 text-sm text-muted">استورد الخدمات من المزودين وحدّد هامش الربح قبل تفعيلها للعملاء</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold text-fg">الخدمات</h1>
+          <p className="mt-1 text-sm text-muted">استورد الخدمات من المزودين وحدّد هامش الربح قبل تفعيلها للعملاء</p>
+        </div>
+        <ReclassifyPlatformsButton />
       </div>
 
       <Card>
