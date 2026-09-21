@@ -1,0 +1,35 @@
+/* Tasst SMM platform theme tokens — light/dark, scoped by CSS variables only
+   used within app/(smm) components (canvas/surface/border2/fg/muted). */
+
+:root {
+  --smm-bg: 247 248 250;
+  --smm-surface: 255 255 255;
+  --smm-surface-2: 241 243 247;
+  --smm-border: 228 231 236;
+  --smm-fg: 16 24 40;
+  --smm-muted: 102 112 133;
+}
+
+.dark {
+  --smm-bg: 10 12 18;
+  --smm-surface: 18 22 31;
+  --smm-surface-2: 23 28 39;
+  --smm-border: 35 40 56;
+  --smm-fg: 244 246 251;
+  --smm-muted: 152 162 179;
+}
+
+.smm-root {
+  background-color: rgb(var(--smm-bg));
+  color: rgb(var(--smm-fg));
+  min-height: 100dvh;
+}
+
+.smm-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.smm-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--smm-border));
+  border-radius: 999px;
+}
