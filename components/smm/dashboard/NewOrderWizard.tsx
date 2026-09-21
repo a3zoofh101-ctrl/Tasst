@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
 import { CheckCircle2, Wallet } from "lucide-react";
+import { cn } from "@/lib/smm/cn";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Button } from "@/components/smm/ui/Button";
 import { Input, Label, Select, Textarea, FieldError } from "@/components/smm/ui/Input";
 import { Dialog, DialogContent, DialogClose } from "@/components/smm/ui/Dialog";
+import { PlatformIcon } from "@/components/smm/ui/PlatformIcon";
 import { createOrderAction } from "@/lib/smm/actions/orders";
 import { formatMoney, formatNumber } from "@/lib/smm/money";
 
@@ -17,6 +19,7 @@ export type ServiceOption = {
   name: string;
   description: string | null;
   platformId: string;
+  categoryId: string;
   categoryName: string;
   pricePer1000: string;
   minQuantity: number;
@@ -25,12 +28,21 @@ export type ServiceOption = {
   averageTime: string | null;
 };
 
+function StepLabel({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white">{n}</span>
+      <Label className="mb-0">{children}</Label>
+    </div>
+  );
+}
+
 export function NewOrderWizard({
   platforms,
   services,
   balance
 }: {
-  platforms: { id: string; name: string }[];
+  platforms: { id: string; name: string; slug: string }[];
   services: ServiceOption[];
   balance: string;
 }) {
@@ -39,6 +51,7 @@ export function NewOrderWizard({
   const preselected = services.find((s) => s.id === searchParams.get("serviceId"));
 
   const [platformId, setPlatformId] = useState(preselected?.platformId ?? platforms[0]?.id ?? "");
+  const [categoryId, setCategoryId] = useState(preselected?.categoryId ?? "");
   const [serviceId, setServiceId] = useState(preselected?.id ?? "");
   const [link, setLink] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -49,19 +62,39 @@ export function NewOrderWizard({
   const [success, setSuccess] = useState<{ orderId: string } | null>(null);
 
   const platformServices = useMemo(() => services.filter((s) => s.platformId === platformId), [services, platformId]);
-  // Falls back to the platform's first service whenever the selected one
-  // doesn't belong to the current platform, without needing an effect.
-  const effectiveServiceId = platformServices.some((s) => s.id === serviceId) ? serviceId : (platformServices[0]?.id ?? "");
+
+  const categories = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const s of platformServices) if (!seen.has(s.categoryId)) seen.set(s.categoryId, s.categoryName);
+    return [...seen.entries()].map(([id, name]) => ({ id, name }));
+  }, [platformServices]);
+
+  // Falls back to the platform's first category/service whenever the
+  // current selection doesn't belong under the current platform, without
+  // needing an effect.
+  const effectiveCategoryId = categories.some((c) => c.id === categoryId) ? categoryId : (categories[0]?.id ?? "");
+  const categoryServices = useMemo(
+    () => platformServices.filter((s) => s.categoryId === effectiveCategoryId),
+    [platformServices, effectiveCategoryId]
+  );
+  const effectiveServiceId = categoryServices.some((s) => s.id === serviceId) ? serviceId : (categoryServices[0]?.id ?? "");
   const service = services.find((s) => s.id === effectiveServiceId);
 
   function handlePlatformChange(nextPlatformId: string) {
     setPlatformId(nextPlatformId);
-    setServiceId(services.find((s) => s.platformId === nextPlatformId)?.id ?? "");
+    setCategoryId("");
+    setServiceId("");
+  }
+
+  function handleCategoryChange(nextCategoryId: string) {
+    setCategoryId(nextCategoryId);
+    setServiceId("");
   }
 
   const qtyNum = Number(quantity);
   const total = service && qtyNum > 0 ? new Decimal(qtyNum).dividedBy(1000).times(service.pricePer1000).toDecimalPlaces(2) : null;
   const insufficientBalance = total ? total.greaterThan(balance) : false;
+  const balanceAfter = total ? new Decimal(balance).minus(total) : null;
 
   function validate(): boolean {
     const next: typeof errors = {};
@@ -126,25 +159,55 @@ export function NewOrderWizard({
 
   return (
     <Card>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-6">
         <div>
-          <Label htmlFor="platform">المنصة</Label>
-          <Select id="platform" value={platformId} onChange={(e) => handlePlatformChange(e.target.value)}>
+          <StepLabel n={1}>المنصة</StepLabel>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {platforms.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => handlePlatformChange(p.id)}
+                className={cn(
+                  "flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-xs font-semibold transition-colors",
+                  platformId === p.id ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200" : "border-border2 text-fg hover:border-brand-300 dark:hover:border-brand-700"
+                )}
+              >
+                <PlatformIcon slug={p.slug} size="sm" />
+                <span className="truncate">{p.name}</span>
+              </button>
             ))}
-          </Select>
+          </div>
         </div>
 
+        {categories.length > 0 && (
+          <div>
+            <StepLabel n={2}>نوع الخدمة</StepLabel>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => handleCategoryChange(c.id)}
+                  className={cn(
+                    "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                    effectiveCategoryId === c.id ? "bg-brand-600 text-white" : "bg-surface2 text-muted hover:text-fg"
+                  )}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
-          <Label htmlFor="service">الخدمة</Label>
-          <Select id="service" value={effectiveServiceId} onChange={(e) => setServiceId(e.target.value)}>
-            {platformServices.length === 0 && <option value="">لا توجد خدمات متاحة لهذه المنصة</option>}
-            {platformServices.map((s) => (
+          <StepLabel n={3}>الخدمة</StepLabel>
+          <Select value={effectiveServiceId} onChange={(e) => setServiceId(e.target.value)}>
+            {categoryServices.length === 0 && <option value="">لا توجد خدمات متاحة</option>}
+            {categoryServices.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} — {s.categoryName}
+                {s.name} — {s.pricePer1000} ر.س / 1000
               </option>
             ))}
           </Select>
@@ -162,9 +225,8 @@ export function NewOrderWizard({
         {service?.description && <p className="text-xs text-muted">{service.description}</p>}
 
         <div>
-          <Label htmlFor="link">الرابط أو اسم المستخدم</Label>
+          <StepLabel n={4}>الرابط أو اسم المستخدم</StepLabel>
           <Textarea
-            id="link"
             value={link}
             onChange={(e) => setLink(e.target.value)}
             placeholder="https://... أو @username"
@@ -174,9 +236,8 @@ export function NewOrderWizard({
         </div>
 
         <div>
-          <Label htmlFor="quantity">الكمية</Label>
+          <StepLabel n={5}>الكمية</StepLabel>
           <Input
-            id="quantity"
             type="number"
             inputMode="numeric"
             value={quantity}
@@ -186,13 +247,24 @@ export function NewOrderWizard({
           <FieldError>{errors.quantity}</FieldError>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-border2 p-4">
-          <div className="flex items-center gap-2 text-sm text-muted">
-            <Wallet className="size-4" /> رصيدك: {formatMoney(balance)}
+        <div className="rounded-xl border border-border2 p-4">
+          <p className="mb-2.5 text-xs font-bold text-muted">6. السعر</p>
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted">السعر لكل 1000</span>
+              <span className="font-medium text-fg">{service ? `${service.pricePer1000} ر.س` : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted">الكمية</span>
+              <span className="font-medium text-fg">{qtyNum > 0 ? formatNumber(qtyNum) : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border2 pt-1.5">
+              <span className="font-semibold text-fg">الإجمالي</span>
+              <span className="text-lg font-extrabold text-fg">{total ? formatMoney(total.toFixed(2)) : "—"}</span>
+            </div>
           </div>
-          <div className="text-left">
-            <p className="text-xs text-muted">الإجمالي</p>
-            <p className="text-xl font-extrabold text-fg">{total ? formatMoney(total.toFixed(2)) : "—"}</p>
+          <div className="mt-3 flex items-center gap-2 border-t border-border2 pt-3 text-sm text-muted">
+            <Wallet className="size-4" /> رصيدك الحالي: <span className="font-semibold text-fg">{formatMoney(balance)}</span>
           </div>
         </div>
 
@@ -204,6 +276,7 @@ export function NewOrderWizard({
 
         <Button
           className="w-full"
+          size="lg"
           disabled={!service || insufficientBalance}
           onClick={() => {
             if (validate()) setConfirmOpen(true);
@@ -220,6 +293,7 @@ export function NewOrderWizard({
                 <Row label="الرابط" value={link} />
                 <Row label="الكمية" value={formatNumber(qtyNum)} />
                 <Row label="الإجمالي" value={total ? formatMoney(total.toFixed(2)) : "—"} bold />
+                <Row label="الرصيد بعد الطلب" value={balanceAfter ? formatMoney(balanceAfter.toFixed(2)) : "—"} />
               </div>
             )}
             <div className="mt-5 flex items-center justify-end gap-2">

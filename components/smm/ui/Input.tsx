@@ -2,8 +2,11 @@ import { forwardRef } from "react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from "react";
 import { cn } from "@/lib/smm/cn";
 
+// text-base (16px), not text-sm, is deliberate: anything smaller makes
+// iOS Safari auto-zoom the page on focus, which is jarring on every form
+// in the app since this is the shared field base.
 const fieldClasses =
-  "w-full rounded-xl border border-border2 bg-surface px-4 py-2.5 text-sm text-fg outline-none transition-colors placeholder:text-muted focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-50";
+  "w-full rounded-xl border border-border2 bg-surface px-4 py-3 text-base text-fg outline-none transition-colors placeholder:text-muted focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-50";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => (

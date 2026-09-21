@@ -21,6 +21,7 @@ async function NewOrderContent() {
     name: s.name,
     description: s.description,
     platformId: s.platformId,
+    categoryId: s.categoryId,
     categoryName: s.category.name,
     pricePer1000: s.pricePer1000.toFixed(2),
     minQuantity: s.minQuantity,
@@ -31,7 +32,7 @@ async function NewOrderContent() {
 
   return (
     <NewOrderWizard
-      platforms={platforms.map((p) => ({ id: p.id, name: p.name }))}
+      platforms={platforms.map((p) => ({ id: p.id, name: p.name, slug: p.slug }))}
       services={serviceOptions}
       balance={wallet?.balance.toFixed(2) ?? "0.00"}
     />
@@ -43,7 +44,7 @@ export default function NewOrderPage() {
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
         <h1 className="text-2xl font-extrabold text-fg">طلب جديد</h1>
-        <p className="mt-1 text-sm text-muted">اختر الخدمة وأدخل التفاصيل لإتمام طلبك خلال ثوانٍ</p>
+        <p className="mt-1 text-sm text-muted">اختر المنصة والخدمة وأدخل التفاصيل لإتمام طلبك خلال ثوانٍ</p>
       </div>
       <Suspense>
         <NewOrderContent />
