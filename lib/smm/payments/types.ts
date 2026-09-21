@@ -13,4 +13,11 @@ export type DepositResult = {
 export interface PaymentProvider {
   readonly name: string;
   createDeposit(params: { userId: string; amount: Decimal; currency: string }): Promise<DepositResult>;
+  /**
+   * Re-checks a deposit's authoritative status directly against the
+   * gateway's own API. Required for any redirect/webhook-based provider
+   * (createDeposit returns PENDING) — callers must never trust a webhook
+   * payload or a redirect query string on its own, only this.
+   */
+  verifyDeposit?(externalReference: string): Promise<"SUCCEEDED" | "FAILED" | "PENDING">;
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { getOrCreateWallet } from "@/lib/smm/wallet";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/smm/ui/Badge";
 import { EmptyState } from "@/components/smm/ui/States";
 import { Table, Thead, Tr, Th, Td } from "@/components/smm/ui/Table";
 import { DepositDialog } from "@/components/smm/dashboard/DepositDialog";
+import { PaymentCallbackToast } from "@/components/smm/dashboard/PaymentCallbackToast";
 
 const TX_LABELS: Record<string, { label: string; tone: "success" | "danger" | "brand" }> = {
   DEPOSIT: { label: "إيداع", tone: "success" },
@@ -28,6 +30,9 @@ export default async function WalletPage() {
 
   return (
     <div className="space-y-5">
+      <Suspense>
+        <PaymentCallbackToast />
+      </Suspense>
       <div>
         <h1 className="text-2xl font-extrabold text-fg">المحفظة</h1>
         <p className="mt-1 text-sm text-muted">تابع رصيدك وسجل عملياتك المالية</p>

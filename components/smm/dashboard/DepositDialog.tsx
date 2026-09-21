@@ -23,6 +23,14 @@ export function DepositDialog() {
       const formData = new FormData();
       formData.set("amount", amount);
       const res = await depositAction(formData);
+      if (res.ok && res.redirectUrl) {
+        // Redirect-based gateway (e.g. Moyasar/Mada): send the browser to
+        // the hosted payment page. The wallet isn't credited yet — that
+        // happens once the gateway confirms the charge, after we land
+        // back on /dashboard/wallet.
+        window.location.href = res.redirectUrl;
+        return;
+      }
       if (res.ok) {
         toast.success("تم إضافة الرصيد بنجاح");
         setOpen(false);
@@ -44,7 +52,7 @@ export function DepositDialog() {
           إضافة رصيد
         </Button>
       </DialogTrigger>
-      <DialogContent title="إضافة رصيد" description="سيُستخدم مزود دفع تجريبي حاليًا. الدفع الحقيقي (مدى/فيزا/ماستركارد/آبل باي) قادم قريبًا.">
+      <DialogContent title="إضافة رصيد" description="سيتم تحويلك لصفحة دفع آمنة (مدى/فيزا/ماستركارد/آبل باي) عند تفعيل بوابة الدفع، أو يُستخدم مزود تجريبي حاليًا.">
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-2">
             {QUICK_AMOUNTS.map((a) => (

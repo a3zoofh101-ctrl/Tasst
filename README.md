@@ -130,9 +130,27 @@ npm run start
 
 أو عبر Vercel Cron / systemd timer / GitHub Actions حسب بيئة النشر.
 
-## 11) الدفع
+## 11) الدفع (مدى / فيزا / ماستركارد / آبل باي)
 
-يوجد `PaymentProvider` interface (`lib/smm/payments/types.ts`) مع `MockPaymentProvider` للاختبار (`lib/smm/payments/mock.ts`). لا تُخزَّن بيانات بطاقات بنكية على الخادم في أي وقت. لتفعيل الدفع الحقيقي (مدى / آبل باي / فيزا / ماستركارد عبر مزوّد سعودي مرخّص)، أنشئ implementation جديد لنفس الـ interface واستبدل `getPaymentProvider()`.
+يوجد `PaymentProvider` interface (`lib/smm/payments/types.ts`) و`getPaymentProvider()` (`lib/smm/payments/index.ts`) يختار المزوّد تلقائيًا:
+
+- **بدون `MOYASAR_SECRET_KEY`** (الوضع الافتراضي محليًا): يُستخدم `MockPaymentProvider` — إيداع فوري وهمي لأغراض التطوير والاختبار.
+- **بوجود `MOYASAR_SECRET_KEY`**: يُستخدم `MoyasarPaymentProvider` (`lib/smm/payments/moyasar.ts`) — تكامل حقيقي مع [Moyasar](https://moyasar.com)، وهو مزوّد دفع مرخّص من ساما يدعم مدى وفيزا وماستركارد وآبل باي.
+
+**كيف يعمل التدفق الحقيقي:**
+1. `depositAction` (`lib/smm/actions/wallet.ts`) ينشئ Invoice عند Moyasar ويحوّل العميل لصفحة الدفع المستضافة لديهم (بياناته البنكية لا تلمس خادمنا إطلاقًا).
+2. بعد الدفع، يعود العميل عبر `GET /api/payments/moyasar/callback` — للتجربة الفورية فقط.
+3. بالتوازي، يرسل Moyasar Webhook إلى `POST /api/payments/moyasar/webhook?token=<MOYASAR_WEBHOOK_SECRET>` — هذا هو المسار الموثوق (يعمل حتى لو أغلق العميل المتصفح).
+4. كلا المسارين ينتهيان عند `completeRedirectDeposit()` (`lib/smm/payments/complete.ts`) الذي **يعيد التحقق من الحالة الحقيقية مباشرة من Moyasar API** (لا يثق بالـ webhook body ولا بـ query string القادم من المتصفح إطلاقًا)، ثم يُضيف الرصيد مرة واحدة فقط بشكل آمن تزامنيًا (Conditional Update يمنع الإضافة المزدوجة إذا وصل الـ Webhook والـ Callback في نفس اللحظة).
+
+**للتفعيل الفعلي:**
+1. أنشئ حسابًا في [dashboard.moyasar.com](https://dashboard.moyasar.com) واحصل على مفتاح Sandbox (`sk_test_...`)
+2. أضف في `.env`: `APP_URL`, `MOYASAR_SECRET_KEY`, `MOYASAR_WEBHOOK_SECRET` (تختاره أنت)
+3. سجّل رابط الـ Webhook في لوحة Moyasar: `https://your-domain.com/api/payments/moyasar/webhook?token=<MOYASAR_WEBHOOK_SECRET>`
+4. اختبر ببطاقات Sandbox من [docs.moyasar.com/testing](https://docs.moyasar.com/testing)
+5. عند الانتقال للإنتاج، استبدل المفتاح بمفتاح حي (`sk_live_...`) فقط — لا تغيير آخر في الكود مطلوب
+
+لا تُخزَّن بيانات بطاقات بنكية على الخادم في أي وقت — تشتري صفحة الدفع المستضافة عند Moyasar ذلك بالكامل.
 
 ## 12) الاختبارات
 

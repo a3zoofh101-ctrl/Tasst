@@ -6,7 +6,7 @@ import Decimal from "decimal.js";
 import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { getOrCreateWallet, creditWallet } from "@/lib/smm/wallet";
-import { getPaymentProvider } from "@/lib/smm/payments/mock";
+import { getPaymentProvider } from "@/lib/smm/payments";
 import { notifyUser } from "@/lib/smm/notify";
 import { logAudit } from "@/lib/smm/audit";
 
@@ -14,7 +14,7 @@ const depositSchema = z.object({
   amount: z.coerce.number().positive("أدخل مبلغًا صحيحًا").max(50000, "الحد الأقصى للإيداع الواحد 50,000 ر.س")
 });
 
-export type DepositResult = { ok: true } | { ok: false; error: string };
+export type DepositResult = { ok: true; redirectUrl?: string } | { ok: false; error: string };
 
 export async function depositAction(formData: FormData): Promise<DepositResult> {
   const user = await requireUser();
@@ -40,8 +40,18 @@ export async function depositAction(formData: FormData): Promise<DepositResult> 
     }
   });
 
-  if (deposit.status !== "SUCCEEDED") {
+  if (deposit.status === "FAILED") {
     return { ok: false, error: "تعذّرت عملية الدفع، حاول مرة أخرى" };
+  }
+
+  if (deposit.status === "PENDING") {
+    // Redirect-based provider (e.g. Moyasar/Mada): the wallet is credited
+    // later, from the webhook or callback route, once the gateway
+    // confirms the charge actually succeeded — never here.
+    if (!deposit.redirectUrl) {
+      return { ok: false, error: "تعذّر بدء عملية الدفع" };
+    }
+    return { ok: true, redirectUrl: deposit.redirectUrl };
   }
 
   await creditWallet({
