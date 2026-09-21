@@ -4,6 +4,11 @@ import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Badge } from "@/components/smm/ui/Badge";
 import { CreateProviderDialog } from "@/components/smm/admin/CreateProviderDialog";
 import { SyncServicesButton, RefreshBalanceButton, ToggleProviderButton } from "@/components/smm/admin/ProviderActions";
+import { BulkImportDialog } from "@/components/smm/admin/BulkImportDialog";
+
+// The bulk-import action can take a while for a large catalog — give the
+// server action more than the platform default before it's cut off.
+export const maxDuration = 300;
 
 export default async function AdminProvidersPage() {
   const providers = await prisma.provider.findMany({
@@ -45,6 +50,7 @@ export default async function AdminProvidersPage() {
 
             <div className="mt-4 flex flex-wrap gap-2">
               <SyncServicesButton providerId={p.id} />
+              {p.type === "GENERIC" && <BulkImportDialog providerId={p.id} />}
               <RefreshBalanceButton providerId={p.id} />
               <ToggleProviderButton providerId={p.id} active={p.active} />
             </div>

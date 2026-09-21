@@ -5,47 +5,9 @@ import { MockSmmProvider } from "../lib/smm/providers/mock";
 import { GenericSmmProvider } from "../lib/smm/providers/generic";
 import { calcSellingPrice } from "../lib/smm/money";
 import { encryptSecret } from "../lib/smm/auth/encryption";
+import { bulkImportProviderCatalog } from "../lib/smm/catalog-import";
 
 const prisma = new PrismaClient();
-
-function slugify(input: string): string {
-  const slug = input
-    .trim()
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/(^-|-$)/g, "");
-  return slug || "general";
-}
-
-// Maps a provider's free-text category/service name to one of our existing
-// platform slugs where possible (so real services land in the same
-// platform tab as the mock ones), or creates a new platform on the fly.
-const PLATFORM_KEYWORDS: { slug: string; name: string; keywords: string[] }[] = [
-  { slug: "instagram", name: "إنستغرام", keywords: ["instagram", "insta"] },
-  { slug: "tiktok", name: "تيك توك", keywords: ["tiktok", "tik tok"] },
-  { slug: "youtube", name: "يوتيوب", keywords: ["youtube"] },
-  { slug: "x-twitter", name: "X (تويتر)", keywords: ["twitter", "x/twitter", " x "] },
-  { slug: "snapchat", name: "سناب شات", keywords: ["snapchat", "snap"] },
-  { slug: "telegram", name: "تيليجرام", keywords: ["telegram"] },
-  { slug: "facebook", name: "فيسبوك", keywords: ["facebook", " fb "] },
-  { slug: "linkedin", name: "لينكدإن", keywords: ["linkedin"] },
-  { slug: "spotify", name: "سبوتيفاي", keywords: ["spotify"] },
-  { slug: "twitch", name: "تويتش", keywords: ["twitch"] },
-  { slug: "discord", name: "ديسكورد", keywords: ["discord"] },
-  { slug: "pinterest", name: "بينترست", keywords: ["pinterest"] },
-  { slug: "threads", name: "ثريدز", keywords: ["threads"] },
-  { slug: "whatsapp", name: "واتساب", keywords: ["whatsapp"] },
-  { slug: "reddit", name: "ريديت", keywords: ["reddit"] },
-  { slug: "soundcloud", name: "ساوند كلاود", keywords: ["soundcloud"] }
-];
-
-function detectPlatform(text: string): { slug: string; name: string } {
-  const lower = ` ${text.toLowerCase()} `;
-  for (const p of PLATFORM_KEYWORDS) {
-    if (p.keywords.some((k) => lower.includes(k))) return p;
-  }
-  return { slug: "other", name: "أخرى" };
-}
 
 /**
  * Optional: connects a real SMM provider (any panel using the classic
@@ -101,91 +63,14 @@ async function seedRealProvider() {
     return;
   }
 
-  const platformCache = new Map<string, { id: string }>();
-  const categoryCache = new Map<string, { id: string }>();
-  let platformSortOrder = 100;
-  let imported = 0;
-  let skipped = 0;
+  const { imported, skipped, total } = await bulkImportProviderCatalog({
+    prisma,
+    providerId: provider.id,
+    services,
+    markupPercent
+  });
 
-  for (const s of services) {
-    const detected = detectPlatform(`${s.category ?? ""} ${s.name}`);
-
-    let platform = platformCache.get(detected.slug);
-    if (!platform) {
-      platform = await prisma.platform.upsert({
-        where: { slug: detected.slug },
-        update: {},
-        create: { name: detected.name, slug: detected.slug, sortOrder: platformSortOrder++ }
-      });
-      platformCache.set(detected.slug, platform);
-    }
-
-    const categoryName = s.category?.trim() || "عام";
-    const categoryKey = `${platform.id}:${slugify(categoryName)}`;
-    let category = categoryCache.get(categoryKey);
-    if (!category) {
-      category = await prisma.category.upsert({
-        where: { platformId_slug: { platformId: platform.id, slug: slugify(categoryName) } },
-        update: {},
-        create: { platformId: platform.id, name: categoryName, slug: slugify(categoryName) }
-      });
-      categoryCache.set(categoryKey, category);
-    }
-
-    const providerService = await prisma.providerService.upsert({
-      where: { providerId_providerServiceId: { providerId: provider.id, providerServiceId: s.providerServiceId } },
-      update: {
-        providerName: s.name,
-        providerCategory: s.category,
-        providerRate: s.rate,
-        minQuantity: s.minQuantity,
-        maxQuantity: s.maxQuantity,
-        imported: true
-      },
-      create: {
-        providerId: provider.id,
-        providerServiceId: s.providerServiceId,
-        providerName: s.name,
-        providerCategory: s.category,
-        providerRate: s.rate,
-        minQuantity: s.minQuantity,
-        maxQuantity: s.maxQuantity,
-        imported: true
-      }
-    });
-
-    const existingService = await prisma.service.findUnique({ where: { providerServiceId: providerService.id } });
-    if (existingService) {
-      skipped++;
-      continue;
-    }
-
-    const pricePer1000 = calcSellingPrice(s.rate, "PERCENT", markupPercent);
-
-    await prisma.service.create({
-      data: {
-        providerServiceId: providerService.id,
-        providerId: provider.id,
-        providerRefId: s.providerServiceId,
-        platformId: platform.id,
-        categoryId: category.id,
-        name: s.name,
-        providerCost: s.rate,
-        markupType: "PERCENT",
-        markupValue: markupPercent,
-        pricePer1000: pricePer1000.toFixed(2),
-        minQuantity: s.minQuantity,
-        maxQuantity: s.maxQuantity,
-        active: true,
-        refill: s.refill ?? false,
-        cancelSupported: s.cancelSupported ?? false,
-        averageTime: s.averageTime
-      }
-    });
-    imported++;
-  }
-
-  console.log(`✅ Real provider "${providerName}": ${imported} service(s) imported and activated, ${skipped} already existed.`);
+  console.log(`✅ Real provider "${providerName}": ${imported}/${total} service(s) imported and activated, ${skipped} already existed.`);
 }
 
 const PLATFORM_SLUG_TO_SERVICE_PREFIX: Record<string, string> = {

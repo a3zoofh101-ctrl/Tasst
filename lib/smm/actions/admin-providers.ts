@@ -8,6 +8,7 @@ import { encryptSecret } from "@/lib/smm/auth/encryption";
 import { getProviderAdapter } from "@/lib/smm/providers/factory";
 import { ProviderApiError } from "@/lib/smm/providers/types";
 import { logAudit } from "@/lib/smm/audit";
+import { bulkImportProviderCatalog } from "@/lib/smm/catalog-import";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -115,5 +116,57 @@ export async function syncProviderServicesAction(providerId: string): Promise<Ac
     return { ok: true, count: services.length };
   } catch (err) {
     return { ok: false, error: err instanceof ProviderApiError ? err.message : "تعذّرت مزامنة الخدمات" };
+  }
+}
+
+const bulkImportSchema = z.object({
+  providerId: z.string().min(1),
+  markupPercent: z.coerce.number().min(0).max(1000)
+});
+
+// One-click alternative to importing services one-by-one from
+// /admin/services: pulls the provider's entire catalog and activates
+// every service immediately at a flat markup. No terminal/seed script
+// needed — this is the path for deployments managed entirely from a
+// browser (e.g. a phone). Safe to re-run: already-imported services are
+// skipped, so a timeout partway through just needs another click.
+export async function bulkImportAllServicesAction(
+  formData: FormData
+): Promise<ActionResult & { imported?: number; skipped?: number; total?: number }> {
+  const admin = await requireAdmin();
+  const parsed = bulkImportSchema.safeParse({
+    providerId: formData.get("providerId"),
+    markupPercent: formData.get("markupPercent")
+  });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
+
+  const provider = await prisma.provider.findUnique({ where: { id: parsed.data.providerId } });
+  if (!provider) return { ok: false, error: "المزود غير موجود" };
+
+  try {
+    const adapter = getProviderAdapter(provider);
+    const services = await adapter.getServices();
+
+    const result = await bulkImportProviderCatalog({
+      prisma,
+      providerId: provider.id,
+      services,
+      markupPercent: parsed.data.markupPercent
+    });
+
+    await logAudit({
+      actorId: admin.id,
+      action: "PROVIDER_BULK_IMPORTED",
+      entityType: "Provider",
+      entityId: provider.id,
+      metadata: result
+    });
+
+    revalidatePath("/admin/services");
+    revalidatePath("/admin/providers");
+    revalidatePath("/dashboard/services");
+    return { ok: true, ...result };
+  } catch (err) {
+    return { ok: false, error: err instanceof ProviderApiError ? err.message : "تعذّر استيراد كتالوج المزوّد" };
   }
 }
