@@ -4,6 +4,11 @@ import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/smm/auth/jwt";
 const locales = ["ar", "en"];
 const defaultLocale = "ar";
 
+// This repo also hosts an unrelated demo project (a perfume store) at "/" —
+// see README. boost20.com was bought specifically for the بوست SMM
+// platform, so its root should land on /smm instead of that demo.
+const SMM_ROOT_DOMAINS = ["boost20.com", "www.boost20.com"];
+
 const standaloneRoutes = [
   "/moqnaas",
   "/baladiya",
@@ -42,6 +47,10 @@ async function smmAuthGuard(request: NextRequest): Promise<NextResponse> {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname === "/" && SMM_ROOT_DOMAINS.includes(request.headers.get("host") ?? "")) {
+    return NextResponse.redirect(new URL("/smm", request.url));
+  }
 
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
     return smmAuthGuard(request);
