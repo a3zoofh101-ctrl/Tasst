@@ -3,7 +3,7 @@
 // provider's catalog can be bulk-imported from either a local seed run or
 // a single click in the admin UI (the latter needs no terminal at all —
 // works from a phone browser).
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Prisma } from "@prisma/client";
 import { calcSellingPrice } from "@/lib/smm/money";
 import type { ProviderServiceDto } from "@/lib/smm/providers/types";
 
@@ -48,123 +48,163 @@ export function detectPlatform(text: string): { slug: string; name: string } {
 
 export type BulkImportResult = { imported: number; skipped: number; total: number };
 
+const CHUNK_SIZE = 1000;
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+// Distinct platforms are always a handful, but distinct categories can run
+// into the hundreds for a large catalog — an unbounded Promise.all there
+// could exhaust the DB connection pool, so cap concurrency.
+async function upsertInBatches<T, R>(items: T[], batchSize: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = [];
+  for (const batch of chunk(items, batchSize)) {
+    out.push(...(await Promise.all(batch.map(fn))));
+  }
+  return out;
+}
+
 /**
  * Imports every service a provider's catalog returns as an active Service
  * at the given flat markup — auto-detecting/creating Platform + Category
  * rows as needed. Idempotent: safe to re-run (skips services already
- * imported, refreshes their ProviderService cache either way).
+ * imported).
+ *
+ * Runs as a handful of bulk queries (chunked at CHUNK_SIZE) instead of a
+ * few round-trips per service — a provider catalog can run into the
+ * thousands, and a per-service loop reliably blows past Vercel's 300s
+ * function limit at that size. Refreshing an already-cached
+ * ProviderService row's price/name is "مزامنة الخدمات" (syncProviderServicesAction)'s
+ * job, not this one's — this only fills in Service rows that don't exist yet.
  */
 export async function bulkImportProviderCatalog(params: {
   prisma: PrismaClient;
   providerId: string;
   services: ProviderServiceDto[];
   markupPercent: string | number;
-  onProgress?: (done: number, total: number) => void;
-  concurrency?: number;
 }): Promise<BulkImportResult> {
-  const { prisma, providerId, services, markupPercent, concurrency = 20 } = params;
+  const { prisma, providerId, services, markupPercent } = params;
+  if (services.length === 0) return { imported: 0, skipped: 0, total: 0 };
 
-  // Caches hold the upsert *promise*, not the resolved row, so concurrent
-  // imports racing on the same new platform/category share one in-flight
-  // upsert instead of firing duplicate requests before either resolves.
-  const platformCache = new Map<string, Promise<{ id: string }>>();
-  const categoryCache = new Map<string, Promise<{ id: string }>>();
-  let platformSortOrder = 100;
-  let imported = 0;
-  let skipped = 0;
-  let done = 0;
-
-  function getPlatform(detected: { slug: string; name: string }) {
-    let platform = platformCache.get(detected.slug);
-    if (!platform) {
-      platform = prisma.platform.upsert({
-        where: { slug: detected.slug },
-        update: {},
-        create: { name: detected.name, slug: detected.slug, sortOrder: platformSortOrder++ }
-      });
-      platformCache.set(detected.slug, platform);
-    }
-    return platform;
-  }
-
-  function getCategory(platformId: string, categoryName: string) {
-    const categoryKey = `${platformId}:${slugify(categoryName)}`;
-    let category = categoryCache.get(categoryKey);
-    if (!category) {
-      category = prisma.category.upsert({
-        where: { platformId_slug: { platformId, slug: slugify(categoryName) } },
-        update: {},
-        create: { platformId, name: categoryName, slug: slugify(categoryName) }
-      });
-      categoryCache.set(categoryKey, category);
-    }
-    return category;
-  }
-
-  async function importOne(s: ProviderServiceDto) {
+  const resolved = services.map((s) => {
     const detected = detectPlatform(`${s.category ?? ""} ${s.name}`);
-    const platform = await getPlatform(detected);
     const categoryName = s.category?.trim() || "عام";
-    const category = await getCategory(platform.id, categoryName);
+    return { service: s, platformSlug: detected.slug, platformName: detected.name, categoryName, categorySlug: slugify(categoryName) };
+  });
 
-    const providerService = await prisma.providerService.upsert({
-      where: { providerId_providerServiceId: { providerId, providerServiceId: s.providerServiceId } },
-      update: {
-        providerName: s.name,
-        providerCategory: s.category,
-        providerRate: s.rate,
-        minQuantity: s.minQuantity,
-        maxQuantity: s.maxQuantity,
-        imported: true
-      },
-      create: {
-        providerId,
-        providerServiceId: s.providerServiceId,
-        providerName: s.name,
-        providerCategory: s.category,
-        providerRate: s.rate,
-        minQuantity: s.minQuantity,
-        maxQuantity: s.maxQuantity,
-        imported: true
-      }
+  // Upsert only the distinct platforms/categories actually needed — at
+  // most a few dozen round-trips, regardless of how many thousand
+  // services are in the catalog.
+  const distinctPlatforms = new Map<string, string>();
+  for (const r of resolved) distinctPlatforms.set(r.platformSlug, r.platformName);
+
+  let sortOrder = 100;
+  const platformRows = await upsertInBatches([...distinctPlatforms.entries()], 20, ([slug, name]) =>
+    prisma.platform.upsert({
+      where: { slug },
+      update: {},
+      create: { name, slug, sortOrder: sortOrder++ }
+    })
+  );
+  const platformBySlug = new Map(platformRows.map((p) => [p.slug, p]));
+
+  const distinctCategories = new Map<string, { platformId: string; name: string; slug: string }>();
+  for (const r of resolved) {
+    const platformId = platformBySlug.get(r.platformSlug)!.id;
+    const key = `${platformId}:${r.categorySlug}`;
+    if (!distinctCategories.has(key)) distinctCategories.set(key, { platformId, name: r.categoryName, slug: r.categorySlug });
+  }
+
+  const categoryKeys = [...distinctCategories.keys()];
+  const categoryRows = await upsertInBatches(categoryKeys, 20, (key) => {
+    const c = distinctCategories.get(key)!;
+    return prisma.category.upsert({
+      where: { platformId_slug: { platformId: c.platformId, slug: c.slug } },
+      update: {},
+      create: { platformId: c.platformId, name: c.name, slug: c.slug }
     });
+  });
+  const categoryByKey = new Map(categoryKeys.map((key, i) => [key, categoryRows[i]]));
 
-    const existingService = await prisma.service.findUnique({ where: { providerServiceId: providerService.id } });
-    if (existingService) {
+  // Bulk-insert the provider's raw catalog cache; rows that already exist
+  // for this provider are skipped (ON CONFLICT DO NOTHING) rather than
+  // refreshed — see the doc comment above.
+  for (const batch of chunk(resolved, CHUNK_SIZE)) {
+    await prisma.providerService.createMany({
+      data: batch.map((r) => ({
+        providerId,
+        providerServiceId: r.service.providerServiceId,
+        providerName: r.service.name,
+        providerCategory: r.service.category,
+        providerRate: r.service.rate,
+        minQuantity: r.service.minQuantity,
+        maxQuantity: r.service.maxQuantity,
+        imported: true
+      })),
+      skipDuplicates: true
+    });
+  }
+
+  // Resolve every incoming service to its (freshly inserted or
+  // pre-existing) ProviderService row id in one pass of chunked lookups.
+  const allRefIds = resolved.map((r) => r.service.providerServiceId);
+  const providerServiceRows: { id: string; providerServiceId: string }[] = [];
+  for (const batch of chunk(allRefIds, CHUNK_SIZE)) {
+    const rows = await prisma.providerService.findMany({
+      where: { providerId, providerServiceId: { in: batch } },
+      select: { id: true, providerServiceId: true }
+    });
+    providerServiceRows.push(...rows);
+  }
+  const providerServiceIdByRef = new Map(providerServiceRows.map((r) => [r.providerServiceId, r.id]));
+
+  const existingServiceIds = new Set<string>();
+  for (const batch of chunk(providerServiceRows.map((r) => r.id), CHUNK_SIZE)) {
+    const rows = await prisma.service.findMany({
+      where: { providerServiceId: { in: batch } },
+      select: { providerServiceId: true }
+    });
+    for (const row of rows) if (row.providerServiceId) existingServiceIds.add(row.providerServiceId);
+  }
+
+  let skipped = 0;
+  const newServiceRows: Prisma.ServiceCreateManyInput[] = [];
+  for (const r of resolved) {
+    const providerServiceRowId = providerServiceIdByRef.get(r.service.providerServiceId);
+    if (!providerServiceRowId) continue;
+    if (existingServiceIds.has(providerServiceRowId)) {
       skipped++;
-    } else {
-      const pricePer1000 = calcSellingPrice(s.rate, "PERCENT", markupPercent);
-      await prisma.service.create({
-        data: {
-          providerServiceId: providerService.id,
-          providerId,
-          providerRefId: s.providerServiceId,
-          platformId: platform.id,
-          categoryId: category.id,
-          name: s.name,
-          providerCost: s.rate,
-          markupType: "PERCENT",
-          markupValue: markupPercent,
-          pricePer1000: pricePer1000.toFixed(2),
-          minQuantity: s.minQuantity,
-          maxQuantity: s.maxQuantity,
-          active: true,
-          refill: s.refill ?? false,
-          cancelSupported: s.cancelSupported ?? false,
-          averageTime: s.averageTime
-        }
-      });
-      imported++;
+      continue;
     }
-
-    done++;
-    params.onProgress?.(done, services.length);
+    const platform = platformBySlug.get(r.platformSlug)!;
+    const category = categoryByKey.get(`${platform.id}:${r.categorySlug}`)!;
+    const pricePer1000 = calcSellingPrice(r.service.rate, "PERCENT", markupPercent);
+    newServiceRows.push({
+      providerServiceId: providerServiceRowId,
+      providerId,
+      providerRefId: r.service.providerServiceId,
+      platformId: platform.id,
+      categoryId: category.id,
+      name: r.service.name,
+      providerCost: r.service.rate,
+      markupType: "PERCENT",
+      markupValue: markupPercent,
+      pricePer1000: pricePer1000.toFixed(2),
+      minQuantity: r.service.minQuantity,
+      maxQuantity: r.service.maxQuantity,
+      active: true,
+      refill: r.service.refill ?? false,
+      cancelSupported: r.service.cancelSupported ?? false,
+      averageTime: r.service.averageTime
+    });
   }
 
-  for (let i = 0; i < services.length; i += concurrency) {
-    const batch = services.slice(i, i + concurrency);
-    await Promise.all(batch.map(importOne));
+  for (const batch of chunk(newServiceRows, CHUNK_SIZE)) {
+    await prisma.service.createMany({ data: batch, skipDuplicates: true });
   }
 
-  return { imported, skipped, total: services.length };
+  return { imported: newServiceRows.length, skipped, total: services.length };
 }
