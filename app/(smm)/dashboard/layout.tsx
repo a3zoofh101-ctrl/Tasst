@@ -5,12 +5,17 @@ import { DashboardShell } from "@/components/smm/dashboard/DashboardShell";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
 
-  const [unreadCount, notifications] = await Promise.all([
+  const [unreadCount, notifications, wallet, spent] = await Promise.all([
     prisma.notification.count({ where: { userId: user.id, read: false } }),
     prisma.notification.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 8
+    }),
+    prisma.wallet.findUnique({ where: { userId: user.id } }),
+    prisma.walletTransaction.aggregate({
+      where: { wallet: { userId: user.id }, type: "PURCHASE" },
+      _sum: { amount: true }
     })
   ]);
 
@@ -19,6 +24,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       name={user.name}
       email={user.email}
       isAdmin={user.role === "ADMIN"}
+      balance={(wallet?.balance ?? 0).toString()}
+      totalSpent={(spent._sum.amount ?? 0).toString()}
       unreadCount={unreadCount}
       notifications={notifications.map((n) => ({
         id: n.id,

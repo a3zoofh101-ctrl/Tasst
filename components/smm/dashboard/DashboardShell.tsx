@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/smm/dashboard/Sidebar";
 import { MobileNav } from "@/components/smm/dashboard/MobileNav";
 import { NotificationBell, type NotificationDto } from "@/components/smm/dashboard/NotificationBell";
 import { UserMenu } from "@/components/smm/dashboard/UserMenu";
+import { AccountSummary } from "@/components/smm/dashboard/AccountSummary";
 import { ThemeToggle } from "@/components/smm/ui/ThemeToggle";
 import { Logo } from "@/components/smm/ui/Logo";
 
@@ -9,6 +10,8 @@ export function DashboardShell({
   name,
   email,
   isAdmin,
+  balance,
+  totalSpent,
   notifications,
   unreadCount,
   children
@@ -16,6 +19,8 @@ export function DashboardShell({
   name: string;
   email: string;
   isAdmin: boolean;
+  balance: string;
+  totalSpent: string;
   notifications: NotificationDto[];
   unreadCount: number;
   children: React.ReactNode;
@@ -35,7 +40,12 @@ export function DashboardShell({
             <UserMenu name={name} email={email} />
           </div>
         </header>
-        <main className="flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-8">{children}</main>
+        <main className="flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-8">
+          <div className="mb-5">
+            <AccountSummary balance={balance} totalSpent={totalSpent} />
+          </div>
+          {children}
+        </main>
       </div>
       <MobileNav />
     </div>

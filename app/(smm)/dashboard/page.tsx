@@ -13,8 +13,7 @@ import { Table, Thead, Tr, Th, Td } from "@/components/smm/ui/Table";
 export default async function DashboardOverviewPage() {
   const user = await requireUser();
 
-  const [wallet, totalOrders, completedOrders, activeOrders, recentOrders] = await Promise.all([
-    prisma.wallet.findUnique({ where: { userId: user.id } }),
+  const [totalOrders, completedOrders, activeOrders, recentOrders] = await Promise.all([
     prisma.order.count({ where: { userId: user.id } }),
     prisma.order.count({ where: { userId: user.id, status: "COMPLETED" } }),
     prisma.order.count({ where: { userId: user.id, status: { in: ["PENDING", "PROCESSING", "IN_PROGRESS"] } } }),
@@ -27,7 +26,6 @@ export default async function DashboardOverviewPage() {
   ]);
 
   const stats = [
-    { label: "الرصيد الحالي", value: formatMoney(wallet?.balance ?? 0), icon: Wallet, tone: "text-brand-600 bg-brand-50 dark:bg-brand-900/30" },
     { label: "إجمالي الطلبات", value: formatNumber(totalOrders), icon: ListOrdered, tone: "text-fg bg-surface2" },
     { label: "الطلبات المكتملة", value: formatNumber(completedOrders), icon: CheckCircle2, tone: "text-success bg-success-bg" },
     { label: "قيد التنفيذ", value: formatNumber(activeOrders), icon: Loader2, tone: "text-warning bg-warning-bg" }
@@ -47,7 +45,7 @@ export default async function DashboardOverviewPage() {
         <p className="mt-1 text-sm text-muted">نظرة سريعة على حسابك وطلباتك</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {stats.map((s) => (
           <Card key={s.label}>
             <CardContent className="flex items-center gap-3">
