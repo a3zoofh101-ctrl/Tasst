@@ -2,13 +2,13 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Search, Star, Clock, RefreshCw, ArrowUpDown } from "lucide-react";
+import { Search, Star, Clock, RefreshCw, ArrowUpDown, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { formatNumber } from "@/lib/smm/money";
 import { Input, Select } from "@/components/smm/ui/Input";
 import { Card } from "@/components/smm/ui/Card";
-import { Badge } from "@/components/smm/ui/Badge";
 import { EmptyState } from "@/components/smm/ui/States";
+import { PlatformIcon } from "@/components/smm/ui/PlatformIcon";
 import { toggleFavoriteAction } from "@/lib/smm/actions/favorites";
 
 export type PlatformDto = { id: string; name: string; slug: string; icon: string | null; categories: { id: string; name: string }[] };
@@ -18,6 +18,7 @@ export type ServiceDto = {
   description: string | null;
   platformId: string;
   platformName: string;
+  platformSlug: string;
   categoryId: string;
   categoryName: string;
   pricePer1000: string;
@@ -70,18 +71,21 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 overflow-x-auto pb-1">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
         <button
           onClick={() => {
             setPlatformId("all");
             setCategoryId("all");
           }}
           className={cn(
-            "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
-            platformId === "all" ? "bg-brand-600 text-white" : "bg-surface2 text-muted hover:text-fg"
+            "flex items-center justify-between gap-2 rounded-xl border bg-surface px-3.5 py-2.5 text-sm font-semibold transition-colors",
+            platformId === "all" ? "border-brand-500 text-brand-700 dark:text-brand-200" : "border-border2 text-fg hover:border-brand-300 dark:hover:border-brand-700"
           )}
         >
           الكل
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white">
+            <LayoutGrid className="size-5" />
+          </span>
         </button>
         {platforms.map((p) => (
           <button
@@ -91,11 +95,12 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
               setCategoryId("all");
             }}
             className={cn(
-              "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
-              platformId === p.id ? "bg-brand-600 text-white" : "bg-surface2 text-muted hover:text-fg"
+              "flex items-center justify-between gap-2 rounded-xl border bg-surface px-3.5 py-2.5 text-sm font-semibold transition-colors",
+              platformId === p.id ? "border-brand-500 text-brand-700 dark:text-brand-200" : "border-border2 text-fg hover:border-brand-300 dark:hover:border-brand-700"
             )}
           >
             {p.name}
+            <PlatformIcon slug={p.slug} />
           </button>
         ))}
       </div>
@@ -139,10 +144,13 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
             return (
               <Card key={s.id} className="flex flex-col p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <Badge tone="brand">{s.platformName}</Badge>
-                    <h3 className="mt-2 font-bold text-fg">{s.name}</h3>
-                    <p className="text-xs text-muted">{s.categoryName}</p>
+                  <div className="flex items-start gap-2.5">
+                    <PlatformIcon slug={s.platformSlug} size="sm" />
+                    <div>
+                      <p className="text-xs font-semibold text-muted">{s.platformName}</p>
+                      <h3 className="font-bold text-fg">{s.name}</h3>
+                      <p className="text-xs text-muted">{s.categoryName}</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => toggleFavorite(s.id, favorited)}

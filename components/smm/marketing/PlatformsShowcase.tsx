@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/smm/db/prisma";
+import { PlatformIcon } from "@/components/smm/ui/PlatformIcon";
 
 export async function PlatformsShowcase() {
   const platforms = await prisma.platform.findMany({
@@ -17,10 +18,8 @@ export async function PlatformsShowcase() {
 
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {platforms.map((p) => (
-            <div key={p.id} className="flex flex-col items-center gap-2 rounded-2xl border border-border2 bg-surface p-5 text-center">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-50 text-lg font-extrabold text-brand-600 dark:bg-brand-900/30">
-                {p.name.charAt(0)}
-              </span>
+            <div key={p.id} className="flex flex-col items-center gap-2 rounded-2xl border border-border2 bg-surface p-5 text-center transition-colors hover:border-brand-300 dark:hover:border-brand-700">
+              <PlatformIcon slug={p.slug} size="lg" />
               <p className="text-sm font-semibold text-fg">{p.name}</p>
               <p className="text-xs text-muted">{p._count.services} خدمة</p>
             </div>

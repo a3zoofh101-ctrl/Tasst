@@ -35,6 +35,7 @@ export default async function ServicesPage() {
     description: s.description,
     platformId: s.platformId,
     platformName: s.platform.name,
+    platformSlug: s.platform.slug,
     categoryId: s.categoryId,
     categoryName: s.category.name,
     pricePer1000: s.pricePer1000.toFixed(2),
