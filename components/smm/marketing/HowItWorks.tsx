@@ -19,7 +19,7 @@ export function HowItWorks() {
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s, i) => (
             <div key={s.title} className="relative rounded-2xl border border-border2 bg-surface p-5">
-              <span className="absolute -top-3 right-5 flex size-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
+              <span className="absolute -top-3 right-5 flex size-7 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white shadow-glow">
                 {i + 1}
               </span>
               <span className="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-900/30">

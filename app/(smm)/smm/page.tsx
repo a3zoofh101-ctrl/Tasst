@@ -1,7 +1,8 @@
 import { Navbar } from "@/components/smm/marketing/Navbar";
 import { Hero } from "@/components/smm/marketing/Hero";
-import { HowItWorks } from "@/components/smm/marketing/HowItWorks";
 import { PlatformsShowcase } from "@/components/smm/marketing/PlatformsShowcase";
+import { PopularServices } from "@/components/smm/marketing/PopularServices";
+import { HowItWorks } from "@/components/smm/marketing/HowItWorks";
 import { Features } from "@/components/smm/marketing/Features";
 import { Stats } from "@/components/smm/marketing/Stats";
 import { PricingTeaser } from "@/components/smm/marketing/PricingTeaser";
@@ -15,8 +16,9 @@ export default function SmmLandingPage() {
       <Navbar />
       <main>
         <Hero />
-        <HowItWorks />
         <PlatformsShowcase />
+        <PopularServices />
+        <HowItWorks />
         <Features />
         <Stats />
         <PricingTeaser />
