@@ -60,39 +60,52 @@ export async function bulkImportProviderCatalog(params: {
   services: ProviderServiceDto[];
   markupPercent: string | number;
   onProgress?: (done: number, total: number) => void;
+  concurrency?: number;
 }): Promise<BulkImportResult> {
-  const { prisma, providerId, services, markupPercent } = params;
+  const { prisma, providerId, services, markupPercent, concurrency = 20 } = params;
 
-  const platformCache = new Map<string, { id: string }>();
-  const categoryCache = new Map<string, { id: string }>();
+  // Caches hold the upsert *promise*, not the resolved row, so concurrent
+  // imports racing on the same new platform/category share one in-flight
+  // upsert instead of firing duplicate requests before either resolves.
+  const platformCache = new Map<string, Promise<{ id: string }>>();
+  const categoryCache = new Map<string, Promise<{ id: string }>>();
   let platformSortOrder = 100;
   let imported = 0;
   let skipped = 0;
+  let done = 0;
 
-  for (const [index, s] of services.entries()) {
-    const detected = detectPlatform(`${s.category ?? ""} ${s.name}`);
-
+  function getPlatform(detected: { slug: string; name: string }) {
     let platform = platformCache.get(detected.slug);
     if (!platform) {
-      platform = await prisma.platform.upsert({
+      platform = prisma.platform.upsert({
         where: { slug: detected.slug },
         update: {},
         create: { name: detected.name, slug: detected.slug, sortOrder: platformSortOrder++ }
       });
       platformCache.set(detected.slug, platform);
     }
+    return platform;
+  }
 
-    const categoryName = s.category?.trim() || "عام";
-    const categoryKey = `${platform.id}:${slugify(categoryName)}`;
+  function getCategory(platformId: string, categoryName: string) {
+    const categoryKey = `${platformId}:${slugify(categoryName)}`;
     let category = categoryCache.get(categoryKey);
     if (!category) {
-      category = await prisma.category.upsert({
-        where: { platformId_slug: { platformId: platform.id, slug: slugify(categoryName) } },
+      category = prisma.category.upsert({
+        where: { platformId_slug: { platformId, slug: slugify(categoryName) } },
         update: {},
-        create: { platformId: platform.id, name: categoryName, slug: slugify(categoryName) }
+        create: { platformId, name: categoryName, slug: slugify(categoryName) }
       });
       categoryCache.set(categoryKey, category);
     }
+    return category;
+  }
+
+  async function importOne(s: ProviderServiceDto) {
+    const detected = detectPlatform(`${s.category ?? ""} ${s.name}`);
+    const platform = await getPlatform(detected);
+    const categoryName = s.category?.trim() || "عام";
+    const category = await getCategory(platform.id, categoryName);
 
     const providerService = await prisma.providerService.upsert({
       where: { providerId_providerServiceId: { providerId, providerServiceId: s.providerServiceId } },
@@ -144,7 +157,13 @@ export async function bulkImportProviderCatalog(params: {
       imported++;
     }
 
-    params.onProgress?.(index + 1, services.length);
+    done++;
+    params.onProgress?.(done, services.length);
+  }
+
+  for (let i = 0; i < services.length; i += concurrency) {
+    const batch = services.slice(i, i + concurrency);
+    await Promise.all(batch.map(importOne));
   }
 
   return { imported, skipped, total: services.length };
