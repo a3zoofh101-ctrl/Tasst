@@ -37,7 +37,7 @@ export class MoyasarPaymentProvider implements PaymentProvider {
         // Moyasar expects the smallest currency unit (halalas for SAR).
         amount: params.amount.times(100).toNumber(),
         currency: params.currency,
-        description: `إيداع رصيد - تَسّت`,
+        description: `إيداع رصيد - بوست`,
         callback_url: `${appUrl}/api/payments/moyasar/callback`,
         metadata: { userId: params.userId }
       })

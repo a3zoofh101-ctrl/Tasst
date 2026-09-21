@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/smm/ui/Card";
 import { SettingsForm } from "@/components/smm/admin/SettingsForm";
 
 const DEFAULTS = {
-  siteName: "تَسّت",
+  siteName: "بوست",
   supportEmail: "support@tasst.local",
   minDepositAmount: "10",
   maxDepositAmount: "50000"

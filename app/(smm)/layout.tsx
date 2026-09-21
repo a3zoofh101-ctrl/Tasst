@@ -6,10 +6,10 @@ import { Toaster } from "@/components/smm/layout/Toaster";
 
 export const metadata: Metadata = {
   title: {
-    default: "تَسّت | منصة إدارة خدمات التسويق الرقمي",
-    template: "%s | تَسّت"
+    default: "بوست | منصة إدارة خدمات التسويق الرقمي",
+    template: "%s | بوست"
   },
-  description: "تَسّت منصة عربية لطلب وإدارة خدمات التسويق الرقمي ومنصات التواصل الاجتماعي من مكان واحد."
+  description: "بوست منصة عربية لطلب وإدارة خدمات التسويق الرقمي ومنصات التواصل الاجتماعي من مكان واحد."
 };
 
 export default function SmmRootLayout({ children }: { children: React.ReactNode }) {

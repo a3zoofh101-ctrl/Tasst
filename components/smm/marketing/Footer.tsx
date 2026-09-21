@@ -19,7 +19,7 @@ export function Footer() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-muted">© {new Date().getFullYear()} تَسّت. جميع الحقوق محفوظة.</p>
+        <p className="mt-8 text-center text-xs text-muted">© {new Date().getFullYear()} بوست. جميع الحقوق محفوظة.</p>
       </div>
     </footer>
   );

@@ -27,7 +27,7 @@ export function Logo({
         <Rocket className={s.icon} />
       </span>
       <span className={cn("font-extrabold leading-none text-fg", s.text)}>
-        تَسّت{subtitle && <span className="align-middle text-sm font-medium text-muted"> {subtitle}</span>}
+        بوست{subtitle && <span className="align-middle text-sm font-medium text-muted"> {subtitle}</span>}
       </span>
     </span>
   );
