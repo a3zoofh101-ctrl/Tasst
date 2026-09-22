@@ -9,7 +9,6 @@ async function NewOrderContent() {
   const [platforms, services, wallet] = await Promise.all([
     prisma.platform.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
     prisma.service.findMany({
-      where: { active: true },
       include: { category: true },
       orderBy: { name: "asc" }
     }),
@@ -28,7 +27,8 @@ async function NewOrderContent() {
     minQuantity: s.minQuantity,
     maxQuantity: s.maxQuantity,
     refill: s.refill,
-    averageTime: s.averageTime
+    averageTime: s.averageTime,
+    available: s.active
   }));
 
   return (

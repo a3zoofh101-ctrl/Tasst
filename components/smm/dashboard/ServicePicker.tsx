@@ -45,6 +45,7 @@ export function ServicePicker({
       ? services
       : services.filter((s) => s.name.toLowerCase().includes(q) || s.providerRefId.toLowerCase().includes(q));
     return [...list].sort((a, b) => {
+      if (a.available !== b.available) return a.available ? -1 : 1;
       const priceDiff = Number(a.pricePer1000) - Number(b.pricePer1000);
       if (priceDiff !== 0) return priceDiff;
       return estimatedHours(a.averageTime) - estimatedHours(b.averageTime);
@@ -71,16 +72,22 @@ export function ServicePicker({
             <button
               key={s.id}
               type="button"
+              disabled={!s.available}
               onClick={() => onChange(s.id)}
               className={cn(
                 "w-full rounded-xl border p-3 text-right transition-colors",
-                selected ? "border-brand-500 bg-brand-50 dark:bg-brand-900/30" : "border-border2 bg-surface hover:border-brand-300 dark:hover:border-brand-700"
+                !s.available
+                  ? "cursor-not-allowed border-border2 bg-surface2/60 opacity-60"
+                  : selected
+                    ? "border-brand-500 bg-brand-50 dark:bg-brand-900/30"
+                    : "border-border2 bg-surface hover:border-brand-300 dark:hover:border-brand-700"
               )}
             >
               <p className="text-sm font-bold text-fg">
                 <span className="text-muted">#{s.providerRefId}</span> — {s.name}
+                {!s.available && <span className="mr-2 rounded-full bg-surface2 px-2 py-0.5 text-[11px] font-semibold text-muted">غير متاحة حاليًا</span>}
               </p>
-              {selected && (
+              {selected && s.available && (
                 <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted">
                   <span className="rounded-full bg-surface2 px-2 py-1 font-bold text-brand-700 dark:text-brand-300">{s.pricePer1000} ر.س / 1000</span>
                   <span className="flex items-center gap-1 rounded-full bg-surface2 px-2 py-1">

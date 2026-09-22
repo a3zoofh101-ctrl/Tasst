@@ -28,6 +28,7 @@ export type ServiceOption = {
   maxQuantity: number;
   refill: boolean;
   averageTime: string | null;
+  available: boolean;
 };
 
 function StepLabel({ n, children }: { n: number; children: React.ReactNode }) {
@@ -79,7 +80,9 @@ export function NewOrderWizard({
     () => platformServices.filter((s) => s.categoryId === effectiveCategoryId),
     [platformServices, effectiveCategoryId]
   );
-  const effectiveServiceId = categoryServices.some((s) => s.id === serviceId) ? serviceId : (categoryServices[0]?.id ?? "");
+  const effectiveServiceId = categoryServices.some((s) => s.id === serviceId)
+    ? serviceId
+    : (categoryServices.find((s) => s.available)?.id ?? categoryServices[0]?.id ?? "");
   const service = services.find((s) => s.id === effectiveServiceId);
 
   function handlePlatformChange(nextPlatformId: string) {
@@ -264,10 +267,16 @@ export function NewOrderWizard({
           </p>
         )}
 
+        {service && !service.available && (
+          <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
+            هذه الخدمة غير متاحة حاليًا، اختر خدمة أخرى.
+          </p>
+        )}
+
         <Button
           className="w-full"
           size="lg"
-          disabled={!service || insufficientBalance}
+          disabled={!service || !service.available || insufficientBalance}
           onClick={() => {
             if (validate()) setConfirmOpen(true);
           }}
