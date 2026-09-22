@@ -110,8 +110,11 @@ export default async function AdminServicesPage() {
                       <Td>
                         <div className="flex gap-1.5">
                           <EditServiceDialog
+                            platforms={platforms.map((p) => ({ id: p.id, name: p.name, categories: p.categories.map((c) => ({ id: c.id, name: c.name })) }))}
                             service={{
                               id: s.id,
+                              platformId: s.platformId,
+                              categoryId: s.categoryId,
                               name: s.name,
                               description: s.description,
                               providerCost: s.providerCost.toFixed(4),

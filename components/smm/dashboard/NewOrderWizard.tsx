@@ -8,14 +8,16 @@ import { CheckCircle2, Wallet } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Button } from "@/components/smm/ui/Button";
-import { Input, Label, Select, Textarea, FieldError } from "@/components/smm/ui/Input";
+import { Input, Label, Textarea, FieldError } from "@/components/smm/ui/Input";
 import { Dialog, DialogContent, DialogClose } from "@/components/smm/ui/Dialog";
 import { PlatformIcon } from "@/components/smm/ui/PlatformIcon";
+import { ServicePicker } from "@/components/smm/dashboard/ServicePicker";
 import { createOrderAction } from "@/lib/smm/actions/orders";
 import { formatMoney, formatNumber } from "@/lib/smm/money";
 
 export type ServiceOption = {
   id: string;
+  providerRefId: string;
   name: string;
   description: string | null;
   platformId: string;
@@ -203,24 +205,12 @@ export function NewOrderWizard({
 
         <div>
           <StepLabel n={3}>الخدمة</StepLabel>
-          <Select value={effectiveServiceId} onChange={(e) => setServiceId(e.target.value)}>
-            {categoryServices.length === 0 && <option value="">لا توجد خدمات متاحة</option>}
-            {categoryServices.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} — {s.pricePer1000} ر.س / 1000
-              </option>
-            ))}
-          </Select>
+          {categoryServices.length === 0 ? (
+            <p className="rounded-xl border border-border2 p-3 text-center text-sm text-muted">لا توجد خدمات متاحة</p>
+          ) : (
+            <ServicePicker services={categoryServices} value={effectiveServiceId} onChange={setServiceId} />
+          )}
         </div>
-
-        {service && (
-          <div className="grid grid-cols-2 gap-3 rounded-xl bg-surface2 p-3 text-sm sm:grid-cols-4">
-            <Info label="السعر / 1000" value={`${service.pricePer1000} ر.س`} />
-            <Info label="الحد الأدنى" value={formatNumber(service.minQuantity)} />
-            <Info label="الحد الأعلى" value={formatNumber(service.maxQuantity)} />
-            <Info label="الوقت المتوقع" value={service.averageTime ?? "—"} />
-          </div>
-        )}
 
         {service?.description && <p className="text-xs text-muted">{service.description}</p>}
 
@@ -310,15 +300,6 @@ export function NewOrderWizard({
         </Dialog>
       </CardContent>
     </Card>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[11px] text-muted">{label}</p>
-      <p className="font-semibold text-fg">{value}</p>
-    </div>
   );
 }
 

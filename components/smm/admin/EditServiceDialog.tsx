@@ -12,6 +12,8 @@ import { updateServiceAction } from "@/lib/smm/actions/admin-services";
 
 export type EditableService = {
   id: string;
+  platformId: string;
+  categoryId: string;
   name: string;
   description: string | null;
   providerCost: string;
@@ -24,12 +26,22 @@ export type EditableService = {
   averageTime: string | null;
 };
 
-export function EditServiceDialog({ service }: { service: EditableService }) {
+export function EditServiceDialog({
+  service,
+  platforms
+}: {
+  service: EditableService;
+  platforms: { id: string; name: string; categories: { id: string; name: string }[] }[];
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [markupType, setMarkupType] = useState(service.markupType);
   const [markupValue, setMarkupValue] = useState(service.markupValue);
+  const [platformId, setPlatformId] = useState(service.platformId);
+  const [categoryId, setCategoryId] = useState(service.categoryId);
+
+  const categories = platforms.find((p) => p.id === platformId)?.categories ?? [];
 
   const preview =
     markupType === "PERCENT"
@@ -66,6 +78,36 @@ export function EditServiceDialog({ service }: { service: EditableService }) {
           <div>
             <Label htmlFor="e-name">الاسم</Label>
             <Input id="e-name" name="name" defaultValue={service.name} required />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="e-platformId">المنصة</Label>
+              <Select
+                id="e-platformId"
+                name="platformId"
+                value={platformId}
+                onChange={(e) => {
+                  setPlatformId(e.target.value);
+                  setCategoryId(platforms.find((p) => p.id === e.target.value)?.categories[0]?.id ?? "");
+                }}
+              >
+                {platforms.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="e-categoryId">التصنيف</Label>
+              <Select id="e-categoryId" name="categoryId" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
           <div>
             <Label htmlFor="e-description">الوصف</Label>

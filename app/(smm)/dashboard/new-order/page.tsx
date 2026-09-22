@@ -18,6 +18,7 @@ async function NewOrderContent() {
 
   const serviceOptions: ServiceOption[] = services.map((s) => ({
     id: s.id,
+    providerRefId: s.providerRefId,
     name: s.name,
     description: s.description,
     platformId: s.platformId,

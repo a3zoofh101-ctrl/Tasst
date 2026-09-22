@@ -7,15 +7,6 @@ import type { PrismaClient, Prisma } from "@prisma/client";
 import { calcSellingPrice } from "@/lib/smm/money";
 import type { ProviderServiceDto } from "@/lib/smm/providers/types";
 
-export function slugify(input: string): string {
-  const slug = input
-    .trim()
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/(^-|-$)/g, "");
-  return slug || "general";
-}
-
 // Maps a provider's free-text category/service name to one of our existing
 // platform slugs where possible (so real services land in the same
 // platform tab as the seeded/mock ones), or a new platform on the fly.
@@ -45,6 +36,40 @@ export function detectPlatform(text: string): { slug: string; name: string } {
   const lower = ` ${text.toLowerCase()} `;
   for (const p of PLATFORM_KEYWORDS) {
     if (p.keywords.some((k) => lower.includes(k))) return p;
+  }
+  return { slug: "other", name: "أخرى" };
+}
+
+// A canonical category taxonomy shared across every platform, instead of
+// trusting the provider's own (often inconsistent, sometimes just
+// Arabic-only) category label. Ordered most-specific-first: "live" is
+// checked before the generic metric keywords so e.g. "لايكات بث مباشر"
+// (live-stream likes) lands under "live", not "likes".
+const CATEGORY_KEYWORDS: { slug: string; name: string; keywords: string[] }[] = [
+  { slug: "live", name: "بث مباشر", keywords: ["live stream", "livestream", "live view", "بث مباشر", "لايف"] },
+  { slug: "story-views", name: "مشاهدات ستوري", keywords: ["story view", "story views", "مشاهدات ستوري", "مشاهدات القصة", "مشاهدات قصص"] },
+  { slug: "poll-votes", name: "تصويت استطلاعات", keywords: ["poll vote", "poll votes", "تصويت", "استطلاع"] },
+  { slug: "reach-impressions", name: "الوصول والانطباعات", keywords: ["impression", "impressions", "reach", "انطباع", "انطباعات", "وصول"] },
+  { slug: "profile-visits", name: "زيارات الملف الشخصي", keywords: ["profile visit", "زيارات الملف", "زيارة الملف", "زوار الملف"] },
+  { slug: "connections", name: "اتصالات", keywords: ["connections", "connection", "اتصالات"] },
+  { slug: "listeners", name: "مستمعين", keywords: ["listeners", "listener", "مستمع", "مستمعين"] },
+  { slug: "plays", name: "تشغيلات", keywords: ["plays", "play count", "stream count", "تشغيل", "تشغيلات", "استماع"] },
+  { slug: "saves", name: "حفظ", keywords: ["save", "saves", "bookmark", "bookmarks", "حفظ", "محفوظات"] },
+  { slug: "reposts", name: "ريتويت / إعادة نشر", keywords: ["retweet", "retweets", "repost", "reposts", "ريتويت", "اعادة نشر", "إعادة نشر"] },
+  { slug: "shares", name: "مشاركات", keywords: ["shares", "share", "مشاركة", "مشاركات"] },
+  { slug: "comments", name: "تعليقات", keywords: ["comments", "comment", "reply", "replies", "تعليق", "تعليقات", "رد", "ردود"] },
+  { slug: "subscribers", name: "مشتركين", keywords: ["subscribers", "subscriber", "مشترك", "مشتركين"] },
+  { slug: "members", name: "أعضاء", keywords: ["members", "member", "عضو", "أعضاء", "اعضاء"] },
+  { slug: "followers", name: "متابعين", keywords: ["followers", "follower", "متابع", "متابعين"] },
+  { slug: "likes", name: "لايكات", keywords: ["likes", "like", "لايك", "لايكات"] },
+  { slug: "views", name: "مشاهدات", keywords: ["views", "view", "مشاهدات", "مشاهدة"] },
+  { slug: "engagement", name: "تفاعل", keywords: ["engagement", "تفاعل"] }
+];
+
+export function detectCategory(text: string): { slug: string; name: string } {
+  const lower = ` ${text.toLowerCase()} `;
+  for (const c of CATEGORY_KEYWORDS) {
+    if (c.keywords.some((k) => lower.includes(k))) return c;
   }
   return { slug: "other", name: "أخرى" };
 }
@@ -93,9 +118,10 @@ export async function bulkImportProviderCatalog(params: {
   if (services.length === 0) return { imported: 0, skipped: 0, total: 0 };
 
   const resolved = services.map((s) => {
-    const detected = detectPlatform(`${s.category ?? ""} ${s.name}`);
-    const categoryName = s.category?.trim() || "عام";
-    return { service: s, platformSlug: detected.slug, platformName: detected.name, categoryName, categorySlug: slugify(categoryName) };
+    const text = `${s.category ?? ""} ${s.name}`;
+    const detected = detectPlatform(text);
+    const category = detectCategory(text);
+    return { service: s, platformSlug: detected.slug, platformName: detected.name, categorySlug: category.slug, categoryName: category.name };
   });
 
   // Upsert only the distinct platforms/categories actually needed — at
@@ -228,6 +254,7 @@ export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<
     select: {
       id: true,
       name: true,
+      description: true,
       platformId: true,
       categoryId: true,
       providerService: { select: { providerCategory: true } }
@@ -236,9 +263,10 @@ export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<
   if (services.length === 0) return { moved: 0, total: 0 };
 
   const resolved = services.map((s) => {
-    const detected = detectPlatform(`${s.providerService?.providerCategory ?? ""} ${s.name}`);
-    const categoryName = s.providerService?.providerCategory?.trim() || "عام";
-    return { service: s, platformSlug: detected.slug, platformName: detected.name, categoryName, categorySlug: slugify(categoryName) };
+    const text = `${s.providerService?.providerCategory ?? ""} ${s.name} ${s.description ?? ""}`;
+    const detected = detectPlatform(text);
+    const category = detectCategory(text);
+    return { service: s, platformSlug: detected.slug, platformName: detected.name, categorySlug: category.slug, categoryName: category.name };
   });
 
   const distinctPlatforms = new Map<string, string>();

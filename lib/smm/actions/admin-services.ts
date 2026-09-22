@@ -66,6 +66,8 @@ export async function importProviderServiceAction(formData: FormData): Promise<A
 
 const updateSchema = z.object({
   serviceId: z.string().min(1),
+  platformId: z.string().min(1),
+  categoryId: z.string().min(1),
   name: z.string().trim().min(2).max(150),
   description: z.string().trim().max(1000).optional().or(z.literal("")),
   markupType: z.enum(["PERCENT", "FIXED"]),
@@ -81,6 +83,8 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
   const admin = await requireAdmin();
   const parsed = updateSchema.safeParse({
     serviceId: formData.get("serviceId"),
+    platformId: formData.get("platformId"),
+    categoryId: formData.get("categoryId"),
     name: formData.get("name"),
     description: formData.get("description"),
     markupType: formData.get("markupType"),
@@ -104,6 +108,8 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
   await prisma.service.update({
     where: { id: service.id },
     data: {
+      platformId: parsed.data.platformId,
+      categoryId: parsed.data.categoryId,
       name: parsed.data.name,
       description: parsed.data.description || null,
       markupType: parsed.data.markupType,

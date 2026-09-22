@@ -16,7 +16,7 @@ export function ReclassifyPlatformsButton() {
     try {
       const res = await reclassifyPlatformsAction();
       if (res.ok) {
-        toast.success(`تم نقل ${res.moved} خدمة لمنصتها الصحيحة (من أصل ${res.total})`);
+        toast.success(`تم نقل ${res.moved} خدمة لمنصتها وتصنيفها الصحيح (من أصل ${res.total})`);
         router.refresh();
       } else {
         toast.error(res.error);
@@ -29,7 +29,7 @@ export function ReclassifyPlatformsButton() {
   return (
     <Button variant="outline" size="sm" onClick={handleClick} loading={pending}>
       <Wand2 className="size-4" />
-      إعادة تصنيف المنصات تلقائيًا
+      إعادة تصنيف المنصات والفئات تلقائيًا
     </Button>
   );
 }
