@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
-import { CheckCircle2, Wallet } from "lucide-react";
+import { CheckCircle2, Wallet, Clock, ArrowUpDown, RefreshCw, Ban, Info } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Button } from "@/components/smm/ui/Button";
@@ -27,6 +27,7 @@ export type ServiceOption = {
   minQuantity: number;
   maxQuantity: number;
   refill: boolean;
+  cancelSupported: boolean;
   averageTime: string | null;
   available: boolean;
 };
@@ -217,7 +218,40 @@ export function NewOrderWizard({
           )}
         </div>
 
-        {service?.description && <p className="text-xs text-muted">{service.description}</p>}
+        {service && (
+          <div className="smm-glass space-y-3 rounded-2xl p-4">
+            <p className="text-xs font-bold text-fg">معلومات الخدمة</p>
+            <div className="grid grid-cols-2 gap-2.5 text-xs sm:grid-cols-4">
+              {service.averageTime && (
+                <div className="flex items-center gap-1.5 text-muted">
+                  <Clock className="size-3.5 shrink-0 text-brand-600 dark:text-brand-300" />
+                  <span className="truncate">{service.averageTime}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 text-muted">
+                <ArrowUpDown className="size-3.5 shrink-0 text-brand-600 dark:text-brand-300" />
+                <span className="truncate">
+                  {formatNumber(service.minQuantity)} - {formatNumber(service.maxQuantity)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-muted">
+                <RefreshCw className="size-3.5 shrink-0 text-brand-600 dark:text-brand-300" />
+                <span>{service.refill ? "يدعم Refill" : "بدون Refill"}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-muted">
+                <Ban className="size-3.5 shrink-0 text-brand-600 dark:text-brand-300" />
+                <span>{service.cancelSupported ? "يدعم الإلغاء" : "بدون إلغاء"}</span>
+              </div>
+            </div>
+
+            {service.description && (
+              <div className="flex gap-2 rounded-xl bg-warning-bg p-3 text-xs text-warning">
+                <Info className="size-4 shrink-0" />
+                <p className="whitespace-pre-line">{service.description}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <StepLabel n={4}>الرابط أو اسم المستخدم</StepLabel>
@@ -239,6 +273,11 @@ export function NewOrderWizard({
             onChange={(e) => setQuantity(e.target.value)}
             placeholder={service ? `${service.minQuantity} - ${service.maxQuantity}` : ""}
           />
+          {service && !errors.quantity && (
+            <p className="mt-1.5 text-xs text-muted">
+              الحد الأدنى: {formatNumber(service.minQuantity)} — الحد الأقصى: {formatNumber(service.maxQuantity)}
+            </p>
+          )}
           <FieldError>{errors.quantity}</FieldError>
         </div>
 
