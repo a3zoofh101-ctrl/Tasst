@@ -41,7 +41,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         العودة للطلبات
       </Link>
 
-      <Card>
+      <Card glass>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-extrabold text-fg">{formatOrderNumber(order.seq)}</h1>

@@ -19,7 +19,7 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" sideOffset={8} className="z-50 w-56 rounded-2xl border border-border2 bg-surface p-2 shadow-xl">
+        <DropdownMenu.Content align="end" sideOffset={8} className="smm-glass z-50 w-56 rounded-2xl p-2 shadow-xl">
           <div className="px-2.5 py-2">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-fg">
               <UserIcon className="size-3.5" /> {name}

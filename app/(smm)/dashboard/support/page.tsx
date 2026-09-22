@@ -28,7 +28,7 @@ export default async function SupportPage() {
       </div>
 
       {tickets.length === 0 ? (
-        <Card>
+        <Card glass>
           <CardContent>
             <EmptyState icon={LifeBuoy} title="لا توجد تذاكر دعم" description="افتح تذكرة جديدة إذا واجهت أي مشكلة" />
           </CardContent>
@@ -37,7 +37,7 @@ export default async function SupportPage() {
         <div className="space-y-3">
           {tickets.map((t) => (
             <Link key={t.id} href={`/dashboard/support/${t.id}`}>
-              <Card className="p-4 transition-colors hover:border-brand-400">
+              <Card glass className="p-4 transition-all hover:-translate-y-0.5 hover:shadow-glow">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-fg">{t.subject}</p>

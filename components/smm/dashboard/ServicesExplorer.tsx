@@ -173,7 +173,7 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
           {filtered.map((s) => {
             const favorited = favoriteOverrides[s.id] ?? s.favorited;
             return (
-              <Card key={s.id} className="flex flex-col p-4 transition-colors hover:border-brand-300 dark:hover:border-brand-700">
+              <Card key={s.id} glass className="flex flex-col p-4 transition-all hover:-translate-y-0.5 hover:shadow-glow">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2.5">
                     <PlatformIcon slug={s.platformSlug} size="sm" />
