@@ -2,6 +2,11 @@ import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { ServicesExplorer, type ServiceDto, type PlatformDto } from "@/components/smm/dashboard/ServicesExplorer";
 
+// Default landing view: a modest, indexed, name-sorted slice instead of
+// the whole active catalog (~5,000 rows in production) — see
+// ServicesExplorer's comment for why that mattered on mobile.
+const INITIAL_PAGE_SIZE = 60;
+
 export default async function ServicesPage() {
   const user = await requireUser();
 
@@ -9,12 +14,16 @@ export default async function ServicesPage() {
     prisma.platform.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },
-      include: { categories: { where: { active: true }, orderBy: { sortOrder: "asc" } } }
+      include: {
+        categories: { where: { active: true }, orderBy: { sortOrder: "asc" } },
+        _count: { select: { services: { where: { active: true } } } }
+      }
     }),
     prisma.service.findMany({
       where: { active: true },
       include: { platform: true, category: true },
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
+      take: INITIAL_PAGE_SIZE
     }),
     prisma.serviceFavorite.findMany({ where: { userId: user.id }, select: { serviceId: true } })
   ]);
@@ -26,6 +35,7 @@ export default async function ServicesPage() {
     name: p.name,
     slug: p.slug,
     icon: p.icon,
+    serviceCount: p._count.services,
     categories: p.categories.map((c) => ({ id: c.id, name: c.name }))
   }));
 
@@ -53,7 +63,7 @@ export default async function ServicesPage() {
         <h1 className="text-2xl font-extrabold text-fg">الخدمات</h1>
         <p className="mt-1 text-sm text-muted">تصفح جميع الخدمات المتاحة حسب المنصة والتصنيف</p>
       </div>
-      <ServicesExplorer platforms={platformDtos} services={serviceDtos} />
+      <ServicesExplorer platforms={platformDtos} initialServices={serviceDtos} />
     </div>
   );
 }

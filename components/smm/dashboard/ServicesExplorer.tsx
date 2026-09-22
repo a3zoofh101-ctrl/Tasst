@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Search, Star, Clock, RefreshCw, ArrowUpDown, ArrowRight, LayoutGrid } from "lucide-react";
+import { Search, Star, Clock, RefreshCw, ArrowUpDown, ArrowRight, LayoutGrid, Loader2 } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { formatNumber } from "@/lib/smm/money";
 import { Input, Select } from "@/components/smm/ui/Input";
@@ -10,8 +10,9 @@ import { Card } from "@/components/smm/ui/Card";
 import { EmptyState } from "@/components/smm/ui/States";
 import { PlatformIcon } from "@/components/smm/ui/PlatformIcon";
 import { toggleFavoriteAction } from "@/lib/smm/actions/favorites";
+import { searchServicesAction, getFavoriteServicesAction, type ServiceSort } from "@/lib/smm/actions/catalog";
 
-export type PlatformDto = { id: string; name: string; slug: string; icon: string | null; categories: { id: string; name: string }[] };
+export type PlatformDto = { id: string; name: string; slug: string; icon: string | null; serviceCount: number; categories: { id: string; name: string }[] };
 export type ServiceDto = {
   id: string;
   name: string;
@@ -30,37 +31,73 @@ export type ServiceDto = {
   favorited: boolean;
 };
 
-type SortKey = "name" | "price-asc" | "price-desc";
-
-export function ServicesExplorer({ platforms, services }: { platforms: PlatformDto[]; services: ServiceDto[] }) {
+// Every service used to be fetched up front and filtered entirely
+// client-side — fine with a handful of services, but shipping the whole
+// production catalog (~5,000 rows) to every mobile visit made this page
+// (and the site generally) feel heavy. Filtering now happens server-side:
+// each control change re-queries a small, capped result set instead of
+// re-filtering an in-memory copy of the entire catalog.
+export function ServicesExplorer({ platforms, initialServices }: { platforms: PlatformDto[]; initialServices: ServiceDto[] }) {
   const [query, setQuery] = useState("");
   const [platformId, setPlatformId] = useState<string>("all");
   const [categoryId, setCategoryId] = useState<string>("all");
-  const [sort, setSort] = useState<SortKey>("name");
+  const [sort, setSort] = useState<ServiceSort>("name");
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
+  const [services, setServices] = useState<ServiceDto[]>(initialServices);
+  const [loading, setLoading] = useState(false);
   const [, startTransition] = useTransition();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstQueryRender = useRef(true);
+  const isFirstFilterRender = useRef(true);
 
   const activePlatform = platforms.find((p) => p.id === platformId);
 
-  const filtered = useMemo(() => {
-    let list = services.filter((s) => {
-      const favorited = favoriteOverrides[s.id] ?? s.favorited;
-      if (onlyFavorites && !favorited) return false;
-      if (platformId !== "all" && s.platformId !== platformId) return false;
-      if (categoryId !== "all" && s.categoryId !== categoryId) return false;
-      if (query.trim() && !s.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
-      return true;
+  function runSearch() {
+    setLoading(true);
+    startTransition(async () => {
+      try {
+        const results = onlyFavorites
+          ? await getFavoriteServicesAction()
+          : await searchServicesAction({
+              platformId: platformId === "all" ? undefined : platformId,
+              categoryId: categoryId === "all" ? undefined : categoryId,
+              q: query,
+              sort
+            });
+        setServices(results);
+      } finally {
+        setLoading(false);
+      }
     });
+  }
 
-    list = [...list].sort((a, b) => {
-      if (sort === "price-asc") return Number(a.pricePer1000) - Number(b.pricePer1000);
-      if (sort === "price-desc") return Number(b.pricePer1000) - Number(a.pricePer1000);
-      return a.name.localeCompare(b.name, "ar");
-    });
+  // Button-driven filters (platform, category, sort, favorites) re-query
+  // immediately; the free-text search box debounces so it doesn't fire a
+  // server round-trip on every keystroke.
+  useEffect(() => {
+    // The initial render already has server-fetched `initialServices` —
+    // skip the redundant round-trip on mount.
+    if (isFirstQueryRender.current) {
+      isFirstQueryRender.current = false;
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(runSearch, 350);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
 
-    return list;
-  }, [services, query, platformId, categoryId, sort, onlyFavorites, favoriteOverrides]);
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+    runSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platformId, categoryId, sort, onlyFavorites]);
 
   function toggleFavorite(serviceId: string, current: boolean) {
     setFavoriteOverrides((prev) => ({ ...prev, [serviceId]: !current }));
@@ -111,7 +148,10 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
               }}
               className="flex items-center justify-between gap-2 rounded-2xl border border-border2 bg-surface px-4 py-3 text-sm font-semibold text-fg shadow-sm shadow-black/[0.03] transition-all hover:border-brand-300 active:scale-[0.98] dark:hover:border-brand-700"
             >
-              {p.name}
+              <span className="flex flex-col items-start">
+                {p.name}
+                <span className="text-[11px] font-normal text-muted">{formatNumber(p.serviceCount)} خدمة</span>
+              </span>
               <PlatformIcon slug={p.slug} />
             </button>
           ))}
@@ -149,7 +189,7 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
           <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث عن خدمة..." className="pr-9" />
         </div>
-        <Select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="sm:w-44">
+        <Select value={sort} onChange={(e) => setSort(e.target.value as ServiceSort)} className="sm:w-44">
           <option value="name">الاسم (أ-ي)</option>
           <option value="price-asc">السعر: الأقل أولاً</option>
           <option value="price-desc">السعر: الأعلى أولاً</option>
@@ -166,11 +206,16 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
         </button>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 rounded-2xl border border-border2 p-10 text-sm text-muted">
+          <Loader2 className="size-4 animate-spin" />
+          جاري البحث...
+        </div>
+      ) : services.length === 0 ? (
         <EmptyState title="لا توجد خدمات مطابقة" description="جرّب تغيير كلمات البحث أو الفلاتر" />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((s) => {
+          {services.map((s) => {
             const favorited = favoriteOverrides[s.id] ?? s.favorited;
             return (
               <Card key={s.id} glass className="flex flex-col p-4 transition-all hover:-translate-y-0.5 hover:shadow-glow">
