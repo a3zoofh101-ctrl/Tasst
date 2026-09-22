@@ -12,6 +12,8 @@ import { ToggleServiceButton } from "@/components/smm/admin/ToggleServiceButton"
 import { DeleteServiceButton } from "@/components/smm/admin/DeleteServiceButton";
 import { ReclassifyPlatformsButton } from "@/components/smm/admin/ReclassifyPlatformsButton";
 import { RollbackReclassifyButton } from "@/components/smm/admin/RollbackReclassifyButton";
+import { ApplyBulkMarkupButton } from "@/components/smm/admin/ApplyBulkMarkupButton";
+import { RollbackMarkupButton } from "@/components/smm/admin/RollbackMarkupButton";
 import type { Prisma } from "@prisma/client";
 
 // Reclassifying pages through every managed service — give the server
@@ -53,6 +55,8 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
         <div className="flex flex-wrap gap-2">
           <ReclassifyPlatformsButton />
           <RollbackReclassifyButton />
+          <ApplyBulkMarkupButton />
+          <RollbackMarkupButton />
         </div>
       </div>
 
