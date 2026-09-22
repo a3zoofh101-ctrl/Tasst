@@ -59,22 +59,24 @@ export function ServicePicker({
               <p className="text-sm font-bold text-fg">
                 <span className="text-muted">#{s.providerRefId}</span> — {s.name}
               </p>
-              <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted">
-                <span className="rounded-full bg-surface2 px-2 py-1 font-bold text-brand-700 dark:text-brand-300">{s.pricePer1000} ر.س / 1000</span>
-                <span className="flex items-center gap-1 rounded-full bg-surface2 px-2 py-1">
-                  <ArrowUpDown className="size-3" /> {formatNumber(s.minQuantity)} - {formatNumber(s.maxQuantity)}
-                </span>
-                {s.averageTime && (
+              {selected && (
+                <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted">
+                  <span className="rounded-full bg-surface2 px-2 py-1 font-bold text-brand-700 dark:text-brand-300">{s.pricePer1000} ر.س / 1000</span>
                   <span className="flex items-center gap-1 rounded-full bg-surface2 px-2 py-1">
-                    <Clock className="size-3" /> {s.averageTime}
+                    <ArrowUpDown className="size-3" /> {formatNumber(s.minQuantity)} - {formatNumber(s.maxQuantity)}
                   </span>
-                )}
-                {s.refill && (
-                  <span className="flex items-center gap-1 rounded-full bg-surface2 px-2 py-1">
-                    <RefreshCw className="size-3" /> ريفيل
-                  </span>
-                )}
-              </div>
+                  {s.averageTime && (
+                    <span className="flex items-center gap-1 rounded-full bg-surface2 px-2 py-1">
+                      <Clock className="size-3" /> {s.averageTime}
+                    </span>
+                  )}
+                  {s.refill && (
+                    <span className="flex items-center gap-1 rounded-full bg-surface2 px-2 py-1">
+                      <RefreshCw className="size-3" /> ريفيل
+                    </span>
+                  )}
+                </div>
+              )}
             </button>
           );
         })}
