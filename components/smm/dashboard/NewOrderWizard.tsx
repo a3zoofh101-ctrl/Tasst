@@ -137,7 +137,7 @@ export function NewOrderWizard({
 
   if (success) {
     return (
-      <Card>
+      <Card glass>
         <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
           <span className="flex size-14 items-center justify-center rounded-full bg-success-bg text-success">
             <CheckCircle2 className="size-7" />
@@ -163,7 +163,7 @@ export function NewOrderWizard({
   }
 
   return (
-    <Card>
+    <Card glass>
       <CardContent className="space-y-6">
         <div>
           <StepLabel n={1}>المنصة</StepLabel>
@@ -174,8 +174,10 @@ export function NewOrderWizard({
                 type="button"
                 onClick={() => handlePlatformChange(p.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-xs font-semibold transition-colors",
-                  platformId === p.id ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200" : "border-border2 text-fg hover:border-brand-300 dark:hover:border-brand-700"
+                  "flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-xs font-semibold transition-all",
+                  platformId === p.id
+                    ? "border-brand-500 bg-brand-50 text-brand-700 shadow-glow dark:bg-brand-900/30 dark:text-brand-200"
+                    : "border-border2 text-fg hover:border-brand-300 dark:hover:border-brand-700"
                 )}
               >
                 <PlatformIcon slug={p.slug} size="sm" />

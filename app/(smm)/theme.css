@@ -100,3 +100,22 @@
     animation: none;
   }
 }
+
+/* Same blobs, no motion — used behind data-dense screens (dashboard) where
+   a moving background would fight for attention with numbers/tables. */
+.smm-mesh-static::before,
+.smm-mesh-static::after {
+  animation: none;
+}
+
+/* Fainter than .smm-mesh — sits behind real content on every dashboard
+   page, not just a hero, so it needs to stay out of the way. */
+.smm-mesh-static::before,
+.smm-mesh-static::after {
+  opacity: 0.25;
+}
+
+.dark .smm-mesh-static::before,
+.dark .smm-mesh-static::after {
+  opacity: 0.18;
+}

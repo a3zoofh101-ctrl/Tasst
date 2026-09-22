@@ -30,7 +30,7 @@ export function DashboardShell({
     <div className="flex min-h-dvh bg-canvas">
       <Sidebar isAdmin={isAdmin} />
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border2 bg-surface/90 px-4 py-3 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border2 bg-surface/75 px-4 py-3 backdrop-blur-xl backdrop-saturate-150 sm:px-6">
           <div className="flex items-center gap-2 lg:hidden">
             <MobileDrawer variant="dashboard" isAdmin={isAdmin} name={name} email={email} balance={balance} logoSubtitle="لوحة العميل" />
             <Logo size="sm" />
@@ -42,7 +42,8 @@ export function DashboardShell({
             <UserMenu name={name} email={email} />
           </div>
         </header>
-        <main className="flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-8">
+        <main className="relative flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-8">
+          <div className="smm-mesh smm-mesh-static" />
           <div className="mb-5">
             <AccountSummary balance={balance} totalSpent={totalSpent} />
           </div>
