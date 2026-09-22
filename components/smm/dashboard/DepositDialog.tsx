@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Wallet } from "lucide-react";
+import { Wallet, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger, DialogClose } from "@/components/smm/ui/Dialog";
 import { Button } from "@/components/smm/ui/Button";
 import { Input, Label } from "@/components/smm/ui/Input";
@@ -11,11 +11,15 @@ import { depositAction } from "@/lib/smm/actions/wallet";
 
 const QUICK_AMOUNTS = [50, 100, 250, 500];
 
-export function DepositDialog() {
+export function DepositDialog({ minAmount, maxAmount }: { minAmount: string; maxAmount: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [pending, setPending] = useState(false);
+  const min = Number(minAmount);
+  const max = Number(maxAmount);
+  const amountNum = Number(amount);
+  const outOfRange = amount !== "" && (amountNum < min || amountNum > max);
 
   async function submit() {
     setPending(true);
@@ -55,7 +59,7 @@ export function DepositDialog() {
       <DialogContent title="إضافة رصيد" description="سيتم تحويلك لصفحة دفع آمنة (مدى/فيزا/ماستركارد/آبل باي) عند تفعيل بوابة الدفع، أو يُستخدم مزود تجريبي حاليًا.">
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-2">
-            {QUICK_AMOUNTS.map((a) => (
+            {QUICK_AMOUNTS.filter((a) => a >= min && a <= max).map((a) => (
               <button
                 key={a}
                 type="button"
@@ -68,7 +72,18 @@ export function DepositDialog() {
           </div>
           <div>
             <Label htmlFor="amount">المبلغ (ر.س)</Label>
-            <Input id="amount" type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
+            <Input id="amount" type="number" min={min} max={max} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
+            {outOfRange && (
+              <p className="mt-1 text-xs text-danger">
+                المبلغ يجب أن يكون بين {min} و {max} ر.س
+              </p>
+            )}
+          </div>
+          <div className="flex items-start gap-2 rounded-xl bg-surface2 p-3 text-xs text-muted">
+            <Info className="size-3.5 shrink-0 translate-y-0.5" />
+            <p>
+              معلومات هامة: الحد الأدنى للإيداع {min} ر.س، والحد الأقصى للعملية الواحدة {max} ر.س.
+            </p>
           </div>
           <div className="flex items-center justify-end gap-2">
             <DialogClose asChild>
@@ -76,7 +91,7 @@ export function DepositDialog() {
                 إلغاء
               </Button>
             </DialogClose>
-            <Button loading={pending} disabled={!amount || Number(amount) <= 0} onClick={submit}>
+            <Button loading={pending} disabled={!amount || amountNum <= 0 || outOfRange} onClick={submit}>
               تأكيد الإيداع
             </Button>
           </div>

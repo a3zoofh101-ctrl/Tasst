@@ -26,7 +26,7 @@ export function Badge({
   );
 }
 
-const orderStatusMap: Record<OrderStatus, { label: string; tone: keyof typeof styles }> = {
+export const orderStatusMap: Record<OrderStatus, { label: string; tone: keyof typeof styles }> = {
   PENDING: { label: "قيد الانتظار", tone: "neutral" },
   PROCESSING: { label: "جارٍ الإرسال", tone: "brand" },
   IN_PROGRESS: { label: "قيد التنفيذ", tone: "brand" },

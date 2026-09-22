@@ -27,6 +27,7 @@ async function NewOrderContent() {
     minQuantity: s.minQuantity,
     maxQuantity: s.maxQuantity,
     refill: s.refill,
+    cancelSupported: s.cancelSupported,
     averageTime: s.averageTime,
     available: s.active
   }));
