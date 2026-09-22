@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { getOrCreateWallet } from "@/lib/smm/wallet";
+import { getSettings } from "@/lib/smm/settings";
 import { formatMoney } from "@/lib/smm/money";
 import { formatDateTime } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
@@ -21,7 +22,7 @@ const TX_LABELS: Record<string, { label: string; tone: "success" | "danger" | "b
 
 export default async function WalletPage() {
   const user = await requireUser();
-  const wallet = await getOrCreateWallet(user.id);
+  const [wallet, settings] = await Promise.all([getOrCreateWallet(user.id), getSettings()]);
 
   const transactions = await prisma.walletTransaction.findMany({
     where: { walletId: wallet.id },
@@ -45,7 +46,7 @@ export default async function WalletPage() {
             <p className="text-sm text-muted">الرصيد الحالي</p>
             <p className="text-4xl font-extrabold text-fg">{formatMoney(wallet.balance)}</p>
           </div>
-          <DepositDialog />
+          <DepositDialog minAmount={settings.minDepositAmount} maxAmount={settings.maxDepositAmount} />
         </CardContent>
       </Card>
 

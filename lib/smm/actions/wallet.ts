@@ -9,9 +9,10 @@ import { getOrCreateWallet, creditWallet } from "@/lib/smm/wallet";
 import { getPaymentProvider } from "@/lib/smm/payments";
 import { notifyUser } from "@/lib/smm/notify";
 import { logAudit } from "@/lib/smm/audit";
+import { getSettings } from "@/lib/smm/settings";
 
 const depositSchema = z.object({
-  amount: z.coerce.number().positive("أدخل مبلغًا صحيحًا").max(50000, "الحد الأقصى للإيداع الواحد 50,000 ر.س")
+  amount: z.coerce.number().positive("أدخل مبلغًا صحيحًا")
 });
 
 export type DepositResult = { ok: true; redirectUrl?: string } | { ok: false; error: string };
@@ -21,6 +22,16 @@ export async function depositAction(formData: FormData): Promise<DepositResult> 
   const parsed = depositSchema.safeParse({ amount: formData.get("amount") });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "مبلغ غير صالح" };
+  }
+
+  const { minDepositAmount, maxDepositAmount } = await getSettings();
+  const min = Number(minDepositAmount);
+  const max = Number(maxDepositAmount);
+  if (parsed.data.amount < min) {
+    return { ok: false, error: `الحد الأدنى للإيداع ${min} ر.س` };
+  }
+  if (parsed.data.amount > max) {
+    return { ok: false, error: `الحد الأقصى للإيداع الواحد ${max} ر.س` };
   }
 
   const amount = new Decimal(parsed.data.amount).toDecimalPlaces(2);
