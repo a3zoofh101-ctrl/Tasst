@@ -58,7 +58,7 @@ const CATEGORY_KEYWORDS: { slug: string; name: string; keywords: string[] }[] = 
   { slug: "reposts", name: "ريتويت / إعادة نشر", keywords: ["retweet", "retweets", "repost", "reposts", "ريتويت", "اعادة نشر", "إعادة نشر"] },
   { slug: "shares", name: "مشاركات", keywords: ["shares", "share", "مشاركة", "مشاركات"] },
   { slug: "comments", name: "تعليقات", keywords: ["comments", "comment", "reply", "replies", "تعليق", "تعليقات", "رد", "ردود"] },
-  { slug: "subscribers", name: "مشتركين", keywords: ["subscribers", "subscriber", "مشترك", "مشتركين"] },
+  { slug: "subscribers", name: "مشتركين", keywords: ["subscribers", "subscriber", "مشترك", "مشتركين", "اشتراك", "اشتراكات"] },
   { slug: "members", name: "أعضاء", keywords: ["members", "member", "عضو", "أعضاء", "اعضاء"] },
   { slug: "followers", name: "متابعين", keywords: ["followers", "follower", "متابع", "متابعين"] },
   { slug: "likes", name: "لايكات", keywords: ["likes", "like", "لايك", "لايكات"] },
@@ -238,7 +238,8 @@ export async function bulkImportProviderCatalog(params: {
   return { imported: newServiceRows.length, skipped, total: services.length };
 }
 
-export type ReclassifyResult = { moved: number; total: number };
+export type ReclassifySnapshotEntry = { serviceId: string; platformId: string; categoryId: string };
+export type ReclassifyResult = { moved: number; total: number; snapshot: ReclassifySnapshotEntry[] };
 
 /**
  * Re-runs detectPlatform against every already-imported Service (using its
@@ -248,6 +249,11 @@ export type ReclassifyResult = { moved: number; total: number };
  * Grouped into one updateMany per (platform, category) pair rather than a
  * per-service update, so this stays a handful of queries regardless of
  * how many thousand services need moving.
+ *
+ * Returns each moved service's PREVIOUS (platformId, categoryId) as
+ * `snapshot`, so the caller can persist it (e.g. in an audit log) and
+ * offer a real one-click rollback rather than just recommending an
+ * external DB backup.
  */
 export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<ReclassifyResult> {
   const services = await prisma.service.findMany({
@@ -260,7 +266,7 @@ export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<
       providerService: { select: { providerCategory: true } }
     }
   });
-  if (services.length === 0) return { moved: 0, total: 0 };
+  if (services.length === 0) return { moved: 0, total: 0, snapshot: [] };
 
   const resolved = services.map((s) => {
     const text = `${s.providerService?.providerCategory ?? ""} ${s.name} ${s.description ?? ""}`;
@@ -301,12 +307,14 @@ export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<
   const categoryByKey = new Map(categoryKeys.map((key, i) => [key, categoryRows[i]]));
 
   const groups = new Map<string, { platformId: string; categoryId: string; ids: string[] }>();
-  let moved = 0;
+  const snapshot: ReclassifySnapshotEntry[] = [];
   for (const r of resolved) {
     const platform = platformBySlug.get(r.platformSlug)!;
     const category = categoryByKey.get(`${platform.id}:${r.categorySlug}`)!;
     if (r.service.platformId === platform.id && r.service.categoryId === category.id) continue;
-    moved++;
+    // Capture the PREVIOUS location before it's overwritten below, so a
+    // rollback can restore it exactly.
+    snapshot.push({ serviceId: r.service.id, platformId: r.service.platformId, categoryId: r.service.categoryId });
     const key = `${platform.id}:${category.id}`;
     let group = groups.get(key);
     if (!group) {
@@ -325,5 +333,35 @@ export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<
     }
   }
 
-  return { moved, total: services.length };
+  return { moved: snapshot.length, total: services.length, snapshot };
+}
+
+/**
+ * Restores every service in `snapshot` to the (platformId, categoryId) it
+ * had before a reclassifyServicePlatforms() run — the undo half of the
+ * one-click reclassify action. Grouped the same way as the forward move,
+ * so it stays a handful of queries regardless of catalog size.
+ */
+export async function restoreServicePlatforms(prisma: PrismaClient, snapshot: ReclassifySnapshotEntry[]): Promise<{ restored: number }> {
+  const groups = new Map<string, { platformId: string; categoryId: string; ids: string[] }>();
+  for (const entry of snapshot) {
+    const key = `${entry.platformId}:${entry.categoryId}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = { platformId: entry.platformId, categoryId: entry.categoryId, ids: [] };
+      groups.set(key, group);
+    }
+    group.ids.push(entry.serviceId);
+  }
+
+  for (const group of groups.values()) {
+    for (const batch of chunk(group.ids, CHUNK_SIZE)) {
+      await prisma.service.updateMany({
+        where: { id: { in: batch } },
+        data: { platformId: group.platformId, categoryId: group.categoryId }
+      });
+    }
+  }
+
+  return { restored: snapshot.length };
 }
