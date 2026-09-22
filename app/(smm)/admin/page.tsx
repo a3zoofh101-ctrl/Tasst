@@ -39,7 +39,7 @@ export default async function AdminOverviewPage() {
               </span>
               <div>
                 <p className="text-xs font-medium text-muted">{s.label}</p>
-                <p className="text-lg font-bold text-fg">{s.value}</p>
+                <p className="text-lg font-bold text-brand-600 dark:text-brand-300">{s.value}</p>
               </div>
             </CardContent>
           </Card>
