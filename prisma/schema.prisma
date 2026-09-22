@@ -1,0 +1,365 @@
+// SMM Platform database schema.
+// Money fields use Decimal (never Float) to avoid rounding errors.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  IN_PROGRESS
+  COMPLETED
+  PARTIAL
+  CANCELED
+  REFUNDED
+}
+
+enum WalletTxType {
+  DEPOSIT
+  PURCHASE
+  REFUND
+  ADMIN_CREDIT
+  ADMIN_DEBIT
+}
+
+enum ProviderType {
+  MOCK
+  GENERIC
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+enum TicketStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+enum MarkupType {
+  PERCENT
+  FIXED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  wallet          Wallet?
+  orders          Order[]
+  sessions        Session[]
+  tickets         SupportTicket[]
+  supportMessages SupportMessage[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  passwordResets  PasswordResetToken[]
+  favorites       ServiceFavorite[]
+  payments        Payment[]
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revoked   Boolean  @default(false)
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Decimal  @default(0) @db.Decimal(14, 2)
+  currency  String   @default("SAR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id            String       @id @default(cuid())
+  walletId      String
+  wallet        Wallet       @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type          WalletTxType
+  amount        Decimal      @db.Decimal(14, 2)
+  balanceBefore Decimal      @db.Decimal(14, 2)
+  balanceAfter  Decimal      @db.Decimal(14, 2)
+  reference     String?
+  description   String?
+  createdAt     DateTime     @default(now())
+
+  @@index([walletId])
+  @@index([type])
+}
+
+model Platform {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  icon      String?
+  active    Boolean    @default(true)
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  categories Category[]
+  services   Service[]
+}
+
+model Category {
+  id         String   @id @default(cuid())
+  platformId String
+  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  name       String
+  slug       String
+  active     Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  services Service[]
+
+  @@unique([platformId, slug])
+  @@index([platformId])
+}
+
+model Provider {
+  id              String       @id @default(cuid())
+  name            String
+  type            ProviderType @default(MOCK)
+  apiUrl          String?
+  apiKeyEncrypted String?
+  active          Boolean      @default(true)
+  balance         Decimal      @default(0) @db.Decimal(14, 2)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  services         Service[]
+  providerServices ProviderService[]
+  orders           Order[]
+}
+
+// Raw catalog synced from a provider, before an admin curates it into a Service.
+model ProviderService {
+  id                String   @id @default(cuid())
+  providerId        String
+  provider          Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerServiceId String
+  providerName      String
+  providerCategory  String?
+  providerRate      Decimal  @db.Decimal(14, 4)
+  minQuantity       Int
+  maxQuantity       Int
+  raw               Json?
+  imported          Boolean  @default(false)
+  syncedAt          DateTime @default(now())
+
+  service Service?
+
+  @@unique([providerId, providerServiceId])
+  @@index([providerId])
+}
+
+model Service {
+  id                String           @id @default(cuid())
+  providerServiceId String?          @unique
+  providerService   ProviderService? @relation(fields: [providerServiceId], references: [id])
+  providerId        String
+  provider          Provider         @relation(fields: [providerId], references: [id])
+  // The service id to send the provider's API when placing an order (e.g.
+  // ProviderService.providerServiceId when synced, or entered by an admin
+  // for a manually created service).
+  providerRefId     String
+  platformId        String
+  platform          Platform         @relation(fields: [platformId], references: [id])
+  categoryId        String
+  category          Category         @relation(fields: [categoryId], references: [id])
+
+  name            String
+  description     String?
+  providerCost    Decimal    @db.Decimal(14, 4)
+  markupType      MarkupType @default(PERCENT)
+  markupValue     Decimal    @default(0) @db.Decimal(10, 2)
+  pricePer1000    Decimal    @db.Decimal(14, 2)
+  minQuantity     Int
+  maxQuantity     Int
+  active          Boolean    @default(false)
+  refill          Boolean    @default(false)
+  cancelSupported Boolean    @default(false)
+  averageTime     String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  orders    Order[]
+  favorites ServiceFavorite[]
+
+  @@index([platformId])
+  @@index([categoryId])
+  @@index([active])
+}
+
+model ServiceFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, serviceId])
+  @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  seq             Int         @unique @default(autoincrement())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  serviceId       String
+  service         Service     @relation(fields: [serviceId], references: [id])
+  providerId      String
+  provider        Provider    @relation(fields: [providerId], references: [id])
+  providerOrderId String?
+
+  link            String
+  quantity        Int
+  startCount      Int?
+  remains         Int?
+  sellingPrice    Decimal     @db.Decimal(14, 2)
+  providerCost    Decimal     @db.Decimal(14, 2)
+  profit          Decimal     @db.Decimal(14, 2)
+  status          OrderStatus @default(PENDING)
+  idempotencyKey  String      @unique
+  failureReason   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([providerId])
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  provider  String
+  amount    Decimal       @db.Decimal(14, 2)
+  currency  String        @default("SAR")
+  status    PaymentStatus @default(PENDING)
+  reference String?       @unique
+  metadata  Json?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SupportTicket {
+  id           String       @id @default(cuid())
+  seq          Int          @unique @default(autoincrement())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  subject      String
+  type         String
+  orderId      String?
+  status       TicketStatus @default(OPEN)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  messages SupportMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SupportMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id])
+  isAdmin   Boolean       @default(false)
+  message   String
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
