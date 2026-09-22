@@ -20,7 +20,10 @@ export function Features() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-2xl border border-border2 bg-surface p-5">
+            <div
+              key={f.title}
+              className="smm-glass rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow"
+            >
               <span className="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-900/30">
                 <f.icon className="size-5" />
               </span>

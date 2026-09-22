@@ -2,6 +2,11 @@
    used within app/(smm) components (canvas/surface/border2/fg/muted). */
 
 :root {
+  /* Apple's own system font on Apple devices (SF Pro / SF Arabic follow
+     automatically per-script); every other OS falls back to its native
+     UI font (Segoe UI, Roboto, ...) rather than a downloaded web font. */
+  --font-arabic: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
   --smm-bg: 247 248 250;
   --smm-surface: 255 255 255;
   --smm-surface-2: 241 243 247;
@@ -32,4 +37,66 @@
 .smm-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgb(var(--smm-border));
   border-radius: 999px;
+}
+
+/* Frosted-glass panel used by the redesigned marketing page — a translucent
+   surface over the gradient-mesh background instead of a flat card. */
+.smm-glass {
+  background-color: rgb(var(--smm-surface) / 0.6);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgb(var(--smm-border) / 0.7);
+}
+
+.dark .smm-glass {
+  background-color: rgb(var(--smm-surface) / 0.45);
+  border-color: rgb(255 255 255 / 0.08);
+}
+
+/* Soft, slowly-drifting radial blobs for the hero's gradient-mesh
+   background. Respects prefers-reduced-motion via the global rule below. */
+.smm-mesh {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.smm-mesh::before,
+.smm-mesh::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.55;
+}
+
+.smm-mesh::before {
+  top: -10%;
+  right: -10%;
+  width: 55%;
+  height: 55%;
+  background: radial-gradient(circle, #1F6FFC 0%, transparent 70%);
+  animation: float 9s ease-in-out infinite;
+}
+
+.smm-mesh::after {
+  bottom: -15%;
+  left: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle, #43B4FF 0%, transparent 70%);
+  animation: floatSlow 13s ease-in-out infinite;
+}
+
+.dark .smm-mesh::before,
+.dark .smm-mesh::after {
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smm-mesh::before,
+  .smm-mesh::after {
+    animation: none;
+  }
 }

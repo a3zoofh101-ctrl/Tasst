@@ -19,7 +19,7 @@ export function FAQ() {
 
         <div className="mt-8 space-y-3">
           {FAQS.map((f) => (
-            <details key={f.q} className="group rounded-2xl border border-border2 bg-surface p-4 open:pb-4">
+            <details key={f.q} className="smm-glass group rounded-2xl p-4 open:pb-4">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-fg">
                 {f.q}
                 <ChevronDown className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />

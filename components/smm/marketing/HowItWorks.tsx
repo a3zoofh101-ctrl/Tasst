@@ -18,7 +18,10 @@ export function HowItWorks() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s, i) => (
-            <div key={s.title} className="relative rounded-2xl border border-border2 bg-surface p-5">
+            <div
+              key={s.title}
+              className="smm-glass relative rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow"
+            >
               <span className="absolute -top-3 right-5 flex size-7 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white shadow-glow">
                 {i + 1}
               </span>

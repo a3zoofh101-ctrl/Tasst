@@ -1,10 +1,15 @@
 import { cn } from "@/lib/smm/cn";
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Card({
+  className,
+  glass,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { glass?: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border2 bg-surface shadow-sm shadow-black/[0.03]",
+        "rounded-2xl shadow-sm shadow-black/[0.03] transition-shadow",
+        glass ? "smm-glass" : "border border-border2 bg-surface",
         className
       )}
       {...props}

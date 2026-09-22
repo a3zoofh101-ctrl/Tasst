@@ -22,27 +22,22 @@ const config: Config = {
         line: "#E4DACB",
 
         // Tasst SMM platform design tokens (namespaced separately from the
-        // perfume-store palette above; only used under app/(smm)). A
-        // custom violet — not stock Tailwind indigo — paired with a "spark"
-        // fuchsia used sparingly for gradients/glow on the brand mark and
-        // primary CTAs, to read as social/growth rather than generic SaaS.
+        // perfume-store palette above; only used under app/(smm)). A single
+        // indigo/azure family sampled from the بوست BOOST rocket mark
+        // (#0070F8 mid-tone, #001F65 deep shadow) — no secondary brand hue,
+        // by design.
         brand: {
-          50: "#F3EEFF",
-          100: "#E7DCFF",
-          200: "#CDB8FF",
-          300: "#AE8AFF",
-          400: "#9160FF",
-          500: "#7A3CF5",
-          600: "#6423E0",
-          700: "#5119B8",
-          800: "#3F1390",
-          900: "#2E0D6B",
-          DEFAULT: "#6423E0"
-        },
-        spark: {
-          DEFAULT: "#F0338B",
-          light: "#FF6FB3",
-          dark: "#B81667"
+          50: "#EEF4FF",
+          100: "#DCE9FF",
+          200: "#B9D3FF",
+          300: "#86B4FF",
+          400: "#4F8FFF",
+          500: "#1F6FFC",
+          600: "#0058E0",
+          700: "#0044AD",
+          800: "#002F82",
+          900: "#001F5C",
+          DEFAULT: "#0058E0"
         },
         accent: {
           DEFAULT: "#F5A524",
@@ -68,11 +63,11 @@ const config: Config = {
       boxShadow: {
         card: "0 10px 30px -12px rgba(25,20,16,0.18)",
         gold: "0 8px 24px -8px rgba(176,139,79,0.45)",
-        glow: "0 8px 24px -8px rgba(100,35,224,0.45)",
-        glowLg: "0 16px 44px -12px rgba(100,35,224,0.55)"
+        glow: "0 8px 24px -8px rgba(0,88,224,0.45)",
+        glowLg: "0 16px 44px -12px rgba(0,88,224,0.55)"
       },
       backgroundImage: {
-        "brand-gradient": "linear-gradient(135deg, #6423E0 0%, #F0338B 100%)"
+        "brand-gradient": "linear-gradient(135deg, #001F5C 0%, #0058E0 100%)"
       },
       keyframes: {
         fadeUp: {
@@ -94,6 +89,18 @@ const config: Config = {
         drawerOut: {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(100%)" }
+        },
+        float: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "50%": { transform: "translate(2%, -4%) scale(1.05)" }
+        },
+        floatSlow: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "50%": { transform: "translate(-3%, 3%) scale(1.08)" }
+        },
+        glowPulse: {
+          "0%, 100%": { boxShadow: "0 8px 24px -8px rgba(0,88,224,0.45)" },
+          "50%": { boxShadow: "0 12px 36px -8px rgba(31,111,252,0.65)" }
         }
       },
       animation: {
@@ -101,7 +108,10 @@ const config: Config = {
         fadeIn: "fadeIn 0.6s ease-out both",
         shimmer: "shimmer 2.5s linear infinite",
         drawerIn: "drawerIn 0.28s cubic-bezier(0.16,1,0.3,1) both",
-        drawerOut: "drawerOut 0.22s ease-in both"
+        drawerOut: "drawerOut 0.22s ease-in both",
+        float: "float 9s ease-in-out infinite",
+        floatSlow: "floatSlow 13s ease-in-out infinite",
+        glowPulse: "glowPulse 3s ease-in-out infinite"
       }
     }
   },
