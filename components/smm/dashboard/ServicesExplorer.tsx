@@ -79,23 +79,23 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
               setCategoryId("all");
             }}
             aria-label="رجوع لكل المنصات"
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border2 bg-surface text-muted transition-colors hover:text-fg"
+            className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-border2 bg-surface text-muted shadow-sm shadow-black/[0.03] transition-colors hover:text-fg active:scale-[0.98]"
           >
             <ArrowRight className="size-[18px]" />
           </button>
-          <div className="flex items-center gap-2.5 rounded-xl border border-brand-500 bg-surface px-3.5 py-2.5 text-brand-700 dark:text-brand-200">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-brand-500 bg-surface px-4 py-3 text-brand-700 shadow-sm shadow-black/[0.03] dark:text-brand-200">
             <PlatformIcon slug={activePlatform.slug} size="sm" />
             <span className="font-bold">{activePlatform.name}</span>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <button
             onClick={() => {
               setPlatformId("all");
               setCategoryId("all");
             }}
-            className="flex items-center justify-between gap-2 rounded-xl border border-brand-500 bg-surface px-3.5 py-2.5 text-sm font-semibold text-brand-700 transition-colors dark:text-brand-200"
+            className="flex items-center justify-between gap-2 rounded-2xl border border-brand-500 bg-surface px-4 py-3 text-sm font-semibold text-brand-700 shadow-sm shadow-black/[0.03] transition-all active:scale-[0.98] dark:text-brand-200"
           >
             الكل
             <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white">
@@ -109,7 +109,7 @@ export function ServicesExplorer({ platforms, services }: { platforms: PlatformD
                 setPlatformId(p.id);
                 setCategoryId("all");
               }}
-              className="flex items-center justify-between gap-2 rounded-xl border border-border2 bg-surface px-3.5 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-brand-300 dark:hover:border-brand-700"
+              className="flex items-center justify-between gap-2 rounded-2xl border border-border2 bg-surface px-4 py-3 text-sm font-semibold text-fg shadow-sm shadow-black/[0.03] transition-all hover:border-brand-300 active:scale-[0.98] dark:hover:border-brand-700"
             >
               {p.name}
               <PlatformIcon slug={p.slug} />
