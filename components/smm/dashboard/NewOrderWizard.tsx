@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
-import { CheckCircle2, Wallet, Clock, ArrowUpDown, RefreshCw, Ban, Info } from "lucide-react";
+import { CheckCircle2, Wallet, Clock, ArrowUpDown, RefreshCw, Ban, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Button } from "@/components/smm/ui/Button";
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogClose } from "@/components/smm/ui/Dialog";
 import { PlatformIcon } from "@/components/smm/ui/PlatformIcon";
 import { ServicePicker } from "@/components/smm/dashboard/ServicePicker";
 import { createOrderAction } from "@/lib/smm/actions/orders";
+import { getPlatformServicesAction } from "@/lib/smm/actions/catalog";
 import { formatMoney, formatNumber } from "@/lib/smm/money";
 
 export type ServiceOption = {
@@ -43,18 +44,21 @@ function StepLabel({ n, children }: { n: number; children: React.ReactNode }) {
 
 export function NewOrderWizard({
   platforms,
-  services,
+  initialPlatformId,
+  initialServices,
+  preselectedServiceId,
   balance
 }: {
   platforms: { id: string; name: string; slug: string }[];
-  services: ServiceOption[];
+  initialPlatformId: string;
+  initialServices: ServiceOption[];
+  preselectedServiceId?: string;
   balance: string;
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const preselected = services.find((s) => s.id === searchParams.get("serviceId"));
+  const preselected = initialServices.find((s) => s.id === preselectedServiceId);
 
-  const [platformId, setPlatformId] = useState(preselected?.platformId ?? platforms[0]?.id ?? "");
+  const [platformId, setPlatformId] = useState(initialPlatformId);
   const [categoryId, setCategoryId] = useState(preselected?.categoryId ?? "");
   const [serviceId, setServiceId] = useState(preselected?.id ?? "");
   const [link, setLink] = useState("");
@@ -65,7 +69,19 @@ export function NewOrderWizard({
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [success, setSuccess] = useState<{ orderId: string } | null>(null);
 
-  const platformServices = useMemo(() => services.filter((s) => s.platformId === platformId), [services, platformId]);
+  // Each platform's services are fetched on demand and cached here — the
+  // wizard used to receive every Service row in the catalog up front
+  // (~5,000 in production) just so client-side filtering could pick out
+  // one platform's slice of it. Switching platforms now costs one small,
+  // scoped server round-trip instead of shipping the whole catalog on
+  // every page load.
+  const [servicesByPlatform, setServicesByPlatform] = useState<Record<string, ServiceOption[]>>({
+    [initialPlatformId]: initialServices
+  });
+  const [loadingPlatform, setLoadingPlatform] = useState(false);
+  const [, startTransition] = useTransition();
+
+  const platformServices = useMemo(() => servicesByPlatform[platformId] ?? [], [servicesByPlatform, platformId]);
 
   const categories = useMemo(() => {
     const seen = new Map<string, string>();
@@ -84,13 +100,28 @@ export function NewOrderWizard({
   const effectiveServiceId = categoryServices.some((s) => s.id === serviceId)
     ? serviceId
     : (categoryServices.find((s) => s.available)?.id ?? categoryServices[0]?.id ?? "");
-  const service = services.find((s) => s.id === effectiveServiceId);
+  const service = platformServices.find((s) => s.id === effectiveServiceId);
 
   function handlePlatformChange(nextPlatformId: string) {
     setPlatformId(nextPlatformId);
     setCategoryId("");
     setServiceId("");
+
+    if (!servicesByPlatform[nextPlatformId]) {
+      setLoadingPlatform(true);
+      startTransition(async () => {
+        try {
+          const fetched = await getPlatformServicesAction(nextPlatformId);
+          setServicesByPlatform((prev) => ({ ...prev, [nextPlatformId]: fetched }));
+        } catch {
+          toast.error("تعذّر تحميل خدمات هذه المنصة، حاول مرة أخرى");
+        } finally {
+          setLoadingPlatform(false);
+        }
+      });
+    }
   }
+
 
   function handleCategoryChange(nextCategoryId: string) {
     setCategoryId(nextCategoryId);
@@ -211,7 +242,12 @@ export function NewOrderWizard({
 
         <div>
           <StepLabel n={3}>الخدمة</StepLabel>
-          {categoryServices.length === 0 ? (
+          {loadingPlatform ? (
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-border2 p-6 text-sm text-muted">
+              <Loader2 className="size-4 animate-spin" />
+              جاري تحميل خدمات هذه المنصة...
+            </div>
+          ) : categoryServices.length === 0 ? (
             <p className="rounded-xl border border-border2 p-3 text-center text-sm text-muted">لا توجد خدمات متاحة</p>
           ) : (
             <ServicePicker services={categoryServices} value={effectiveServiceId} onChange={setServiceId} />
