@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { getOrCreateWallet } from "@/lib/smm/wallet";
 import { formatMoney } from "@/lib/smm/money";
+import { formatDateTime } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Badge } from "@/components/smm/ui/Badge";
 import { EmptyState } from "@/components/smm/ui/States";
@@ -84,7 +85,7 @@ export default async function WalletPage() {
                         <Td className="text-xs text-muted">{formatMoney(t.balanceBefore)}</Td>
                         <Td className="text-xs text-muted">{formatMoney(t.balanceAfter)}</Td>
                         <Td className="max-w-[220px] truncate text-xs text-muted">{t.description}</Td>
-                        <Td className="text-xs text-muted">{t.createdAt.toLocaleString("ar-SA")}</Td>
+                        <Td className="text-xs text-muted">{formatDateTime(t.createdAt)}</Td>
                       </Tr>
                     );
                   })}

@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatMoney, formatNumber } from "@/lib/smm/money";
 import { formatOrderNumber } from "@/lib/smm/orders";
+import { formatDate } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { OrderStatusBadge } from "@/components/smm/ui/Badge";
 import { EmptyState } from "@/components/smm/ui/States";
@@ -71,7 +72,7 @@ export default async function OrdersPage() {
                       <Td>
                         <OrderStatusBadge status={o.status} />
                       </Td>
-                      <Td className="text-xs text-muted">{o.createdAt.toLocaleDateString("ar-SA")}</Td>
+                      <Td className="text-xs text-muted">{formatDate(o.createdAt)}</Td>
                     </Tr>
                   ))}
                 </tbody>

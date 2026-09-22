@@ -3,6 +3,7 @@ import { prisma } from "@/lib/smm/db/prisma";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { TicketStatusBadge } from "@/components/smm/ui/Badge";
 import { EmptyState } from "@/components/smm/ui/States";
+import { formatDateTime } from "@/lib/smm/date";
 
 export default async function AdminSupportPage() {
   const tickets = await prisma.supportTicket.findMany({
@@ -33,7 +34,7 @@ export default async function AdminSupportPage() {
                   <div>
                     <p className="font-semibold text-fg">{t.subject}</p>
                     <p className="mt-1 text-xs text-muted">
-                      {t.user.name} · {t.updatedAt.toLocaleString("ar-SA")}
+                      {t.user.name} · {formatDateTime(t.updatedAt)}
                     </p>
                   </div>
                   <TicketStatusBadge status={t.status} />

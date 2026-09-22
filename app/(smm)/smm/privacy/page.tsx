@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/smm/marketing/Navbar";
 import { Footer } from "@/components/smm/marketing/Footer";
+import { formatDate } from "@/lib/smm/date";
 
 export default function PrivacyPage() {
   return (
@@ -7,7 +8,7 @@ export default function PrivacyPage() {
       <Navbar />
       <main className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
         <h1 className="text-2xl font-extrabold text-fg sm:text-3xl">سياسة الخصوصية</h1>
-        <p className="mt-2 text-sm text-muted">آخر تحديث: {new Date().toLocaleDateString("ar-SA")}</p>
+        <p className="mt-2 text-sm text-muted">آخر تحديث: {formatDate(new Date())}</p>
 
         <div className="mt-8 space-y-6 text-sm leading-7 text-fg">
           <section>

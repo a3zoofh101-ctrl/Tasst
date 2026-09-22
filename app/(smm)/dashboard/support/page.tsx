@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatOrderNumber } from "@/lib/smm/orders";
+import { formatDateTime } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { TicketStatusBadge } from "@/components/smm/ui/Badge";
 import { EmptyState } from "@/components/smm/ui/States";
@@ -40,7 +41,7 @@ export default async function SupportPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-fg">{t.subject}</p>
-                    <p className="mt-1 text-xs text-muted">{t.updatedAt.toLocaleString("ar-SA")}</p>
+                    <p className="mt-1 text-xs text-muted">{formatDateTime(t.updatedAt)}</p>
                   </div>
                   <TicketStatusBadge status={t.status} />
                 </div>

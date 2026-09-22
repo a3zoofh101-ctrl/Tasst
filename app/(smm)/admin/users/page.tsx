@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatMoney } from "@/lib/smm/money";
+import { formatDate } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Badge } from "@/components/smm/ui/Badge";
 import { Input } from "@/components/smm/ui/Input";
@@ -63,7 +64,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                       <Td>
                         <Badge tone={u.isActive ? "success" : "danger"}>{u.isActive ? "نشط" : "معطّل"}</Badge>
                       </Td>
-                      <Td className="text-xs text-muted">{u.createdAt.toLocaleDateString("ar-SA")}</Td>
+                      <Td className="text-xs text-muted">{formatDate(u.createdAt)}</Td>
                     </Tr>
                   ))}
                 </tbody>

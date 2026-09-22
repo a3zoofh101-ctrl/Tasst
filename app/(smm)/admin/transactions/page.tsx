@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatMoney } from "@/lib/smm/money";
+import { formatDateTime } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Badge } from "@/components/smm/ui/Badge";
 import { Table, Thead, Tr, Th, Td } from "@/components/smm/ui/Table";
@@ -50,7 +51,7 @@ export default async function AdminTransactionsPage() {
                       <Td className="font-semibold">{formatMoney(t.amount)}</Td>
                       <Td className="text-xs text-muted">{formatMoney(t.balanceAfter)}</Td>
                       <Td className="max-w-[220px] truncate text-xs text-muted">{t.description}</Td>
-                      <Td className="text-xs text-muted">{t.createdAt.toLocaleString("ar-SA")}</Td>
+                      <Td className="text-xs text-muted">{formatDateTime(t.createdAt)}</Td>
                     </Tr>
                   ))}
                 </tbody>

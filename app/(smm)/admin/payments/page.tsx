@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatMoney } from "@/lib/smm/money";
+import { formatDateTime } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { Badge } from "@/components/smm/ui/Badge";
 import { Table, Thead, Tr, Th, Td } from "@/components/smm/ui/Table";
@@ -46,7 +47,7 @@ export default async function AdminPaymentsPage() {
                       <Td>
                         <Badge tone={STATUS_TONE[p.status]}>{p.status}</Badge>
                       </Td>
-                      <Td className="text-xs text-muted">{p.createdAt.toLocaleString("ar-SA")}</Td>
+                      <Td className="text-xs text-muted">{formatDateTime(p.createdAt)}</Td>
                     </Tr>
                   ))}
                 </tbody>

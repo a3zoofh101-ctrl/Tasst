@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatMoney, formatNumber } from "@/lib/smm/money";
 import { formatOrderNumber } from "@/lib/smm/orders";
+import { formatDateTime } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { OrderStatusBadge } from "@/components/smm/ui/Badge";
 import { QueryStatusButton, RetryOrderButton } from "@/components/smm/admin/OrderActions";
@@ -32,8 +33,8 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     ["سعر البيع", formatMoney(order.sellingPrice)],
     ["تكلفة المزود", formatMoney(order.providerCost)],
     ["الربح", formatMoney(order.profit)],
-    ["تاريخ الإنشاء", order.createdAt.toLocaleString("ar-SA")],
-    ["آخر تحديث", order.updatedAt.toLocaleString("ar-SA")]
+    ["تاريخ الإنشاء", formatDateTime(order.createdAt)],
+    ["آخر تحديث", formatDateTime(order.updatedAt)]
   ];
 
   return (

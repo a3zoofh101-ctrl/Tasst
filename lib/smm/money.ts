@@ -4,9 +4,16 @@ export function toDecimal(value: Decimal.Value): Decimal {
   return new Decimal(value);
 }
 
+// "ar-SA" alone defaults to Eastern Arabic-Indic digits (٠١٢٣...) — at UI
+// sizes, "٠" in particular renders as a near-invisible dot rather than a
+// clear zero. Force Western digits (-u-nu-latn) explicitly: still fully
+// Arabic script/currency formatting, just legible numerals — the
+// convention real Gulf apps use for on-screen numbers.
+const AR_LATN_DIGITS = "ar-SA-u-nu-latn";
+
 export function formatMoney(value: Decimal.Value, currency = "SAR"): string {
   const amount = new Decimal(value).toDecimalPlaces(2).toNumber();
-  return new Intl.NumberFormat("ar-SA", {
+  return new Intl.NumberFormat(AR_LATN_DIGITS, {
     style: "currency",
     currency,
     currencyDisplay: "symbol"
@@ -14,7 +21,7 @@ export function formatMoney(value: Decimal.Value, currency = "SAR"): string {
 }
 
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat("ar-SA").format(value);
+  return new Intl.NumberFormat(AR_LATN_DIGITS).format(value);
 }
 
 // total = quantity / 1000 * pricePer1000, rounded to 2 decimal places.

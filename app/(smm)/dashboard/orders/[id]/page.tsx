@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatMoney, formatNumber } from "@/lib/smm/money";
 import { formatOrderNumber } from "@/lib/smm/orders";
+import { formatDateTime } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
 import { OrderStatusBadge } from "@/components/smm/ui/Badge";
 
@@ -29,8 +30,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     ["Start Count", order.startCount != null ? formatNumber(order.startCount) : "—"],
     ["المتبقي (Remains)", order.remains != null ? formatNumber(order.remains) : "—"],
     ["السعر", formatMoney(order.sellingPrice)],
-    ["تاريخ الإنشاء", order.createdAt.toLocaleString("ar-SA")],
-    ["آخر تحديث", order.updatedAt.toLocaleString("ar-SA")]
+    ["تاريخ الإنشاء", formatDateTime(order.createdAt)],
+    ["آخر تحديث", formatDateTime(order.updatedAt)]
   ];
 
   return (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/smm/cn";
+import { formatDateTime } from "@/lib/smm/date";
 import { Button } from "@/components/smm/ui/Button";
 import { Textarea } from "@/components/smm/ui/Input";
 import { TicketStatusBadge } from "@/components/smm/ui/Badge";
@@ -72,7 +73,7 @@ export function TicketThread({
             >
               <p className="mb-1 text-[11px] font-semibold opacity-80">{m.authorName}</p>
               <p className="whitespace-pre-wrap">{m.message}</p>
-              <p className="mt-1 text-[10px] opacity-60">{new Date(m.createdAt).toLocaleString("ar-SA")}</p>
+              <p className="mt-1 text-[10px] opacity-60">{formatDateTime(new Date(m.createdAt))}</p>
             </div>
           </div>
         ))}
