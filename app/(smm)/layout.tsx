@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "@/app/globals.css";
 import "@/app/(smm)/theme.css";
 import { ThemeProvider } from "@/components/smm/layout/ThemeProvider";
@@ -33,6 +34,7 @@ export default function SmmRootLayout({ children }: { children: React.ReactNode 
           {children}
           <Toaster />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
