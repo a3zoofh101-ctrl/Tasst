@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { logAudit } from "@/lib/smm/audit";
-import { reclassifyServicePlatforms, restoreServicePlatforms, type ReclassifyResult, type ReclassifySnapshotEntry } from "@/lib/smm/catalog-import";
+import { reclassifyServicePlatformsPage, restoreServicePlatforms, type ReclassifySnapshotEntry } from "@/lib/smm/catalog-import";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -71,33 +71,44 @@ export async function toggleCategoryActiveAction(categoryId: string): Promise<Ac
   return { ok: true };
 }
 
-// One-click fix for a catalog imported before detectPlatform learned
-// Arabic keywords: everything landed under "أخرى" instead of its real
-// platform. Safe to re-run — a no-op once everything's already correct.
-//
-// The full per-service snapshot (previous platformId/categoryId) is kept
-// in the audit log, not sent back to the browser — a large catalog's
-// snapshot can run into the thousands of rows, and the client only needs
-// the summary counts for its toast. rollbackLastReclassifyAction reads it
-// back out to undo the move.
-export async function reclassifyPlatformsAction(): Promise<ActionResult & Partial<Omit<ReclassifyResult, "snapshot">>> {
-  const admin = await requireAdmin();
+// One-page step of the "fix a catalog imported before detectPlatform knew
+// Arabic keywords" reclassify. Deliberately bounded to one page of
+// services per call (not the whole catalog): a single-call full scan of a
+// ~5,000-service production catalog reliably ran past Vercel's Hobby-plan
+// function duration cap and came back as a 500. ReclassifyPlatformsButton
+// drives the pagination loop client-side, calling this repeatedly with the
+// returned cursor until nextCursor is null — each call finishes in a
+// couple of seconds regardless of total catalog size.
+export type ReclassifyPageActionResult = ActionResult & { moved?: number; scanned?: number; nextCursor?: string | null; snapshot?: ReclassifySnapshotEntry[] };
 
-  const { snapshot, ...summary } = await reclassifyServicePlatforms(prisma);
+export async function reclassifyPlatformsPageAction(cursor: string | null): Promise<ReclassifyPageActionResult> {
+  await requireAdmin();
+
+  const page = await reclassifyServicePlatformsPage(prisma, { cursor });
+
+  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/services");
+  revalidatePath("/smm");
+
+  return { ok: true, moved: page.moved, scanned: page.scanned, nextCursor: page.nextCursor, snapshot: page.snapshot };
+}
+
+// Persists the combined snapshot from a full (possibly multi-page)
+// reclassify run as a single audit log entry, once the client-side
+// pagination loop reaches its last page — so rollbackLastReclassifyAction
+// can undo the WHOLE run in one shot instead of only its last page.
+export async function finalizeReclassifyRunAction(params: { moved: number; total: number; snapshot: ReclassifySnapshotEntry[] }): Promise<ActionResult> {
+  const admin = await requireAdmin();
 
   await logAudit({
     actorId: admin.id,
     action: "SERVICES_RECLASSIFIED",
     entityType: "Service",
     entityId: "bulk",
-    metadata: { ...summary, snapshot }
+    metadata: { moved: params.moved, total: params.total, snapshot: params.snapshot }
   });
 
-  revalidatePath("/admin/services");
-  revalidatePath("/dashboard/services");
-  revalidatePath("/smm");
-
-  return { ok: true, ...summary };
+  return { ok: true };
 }
 
 // Undoes the most recent reclassifyPlatformsAction run, restoring every
