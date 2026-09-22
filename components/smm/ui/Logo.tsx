@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Rocket } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/smm/cn";
 
 const SIZES = {
-  sm: { badge: "size-7 rounded-lg", icon: "size-3.5", text: "text-sm" },
-  md: { badge: "size-9 rounded-xl", icon: "size-[18px]", text: "text-lg" },
-  lg: { badge: "size-11 rounded-xl", icon: "size-5", text: "text-xl" }
+  sm: { icon: "h-10 w-auto", text: "text-sm", boost: "text-[8px] tracking-[0.18em]" },
+  md: { icon: "h-10 w-auto sm:h-12", text: "text-lg", boost: "text-[9px] tracking-[0.2em] sm:text-[10px]" },
+  lg: { icon: "h-14 w-auto sm:h-16", text: "text-xl", boost: "text-[11px] tracking-[0.22em]" }
 };
 
 export function Logo({
@@ -23,11 +23,20 @@ export function Logo({
 
   const content = (
     <span className={cn("flex items-center gap-2", className)}>
-      <span className={cn("flex items-center justify-center bg-brand-gradient text-white shadow-glow", s.badge)}>
-        <Rocket className={s.icon} />
-      </span>
-      <span className={cn("font-extrabold leading-none text-fg", s.text)}>
-        بوست{subtitle && <span className="align-middle text-sm font-medium text-muted"> {subtitle}</span>}
+      <Image
+        src="/images/branding/boost-icon.png"
+        alt="بوست BOOST"
+        width={512}
+        height={512}
+        className={cn(s.icon, "shrink-0")}
+        style={{ filter: "drop-shadow(0 0 8px rgba(59, 130, 246, 0.2))" }}
+        priority
+      />
+      <span className="flex flex-col leading-none">
+        <span className={cn("font-extrabold text-fg", s.text)}>
+          بوست{subtitle && <span className="align-middle text-sm font-medium text-muted"> {subtitle}</span>}
+        </span>
+        <span className={cn("font-bold uppercase text-muted", s.boost)}>BOOST</span>
       </span>
     </span>
   );

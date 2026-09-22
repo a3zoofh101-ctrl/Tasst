@@ -5,11 +5,24 @@ import { ThemeProvider } from "@/components/smm/layout/ThemeProvider";
 import { Toaster } from "@/components/smm/layout/Toaster";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
   title: {
-    default: "بوست | منصة إدارة خدمات التسويق الرقمي",
+    default: "بوست | BOOST - خدمات التواصل الاجتماعي",
     template: "%s | بوست"
   },
-  description: "بوست منصة عربية لطلب وإدارة خدمات التسويق الرقمي ومنصات التواصل الاجتماعي من مكان واحد."
+  description: "بوست BOOST - منصة لخدمات التواصل الاجتماعي",
+  openGraph: {
+    title: "بوست | BOOST - خدمات التواصل الاجتماعي",
+    description: "بوست BOOST - منصة لخدمات التواصل الاجتماعي",
+    locale: "ar",
+    images: [{ url: "/images/branding/og-image.png", width: 1200, height: 630, alt: "بوست BOOST" }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "بوست | BOOST - خدمات التواصل الاجتماعي",
+    description: "بوست BOOST - منصة لخدمات التواصل الاجتماعي",
+    images: ["/images/branding/og-image.png"]
+  }
 };
 
 export default function SmmRootLayout({ children }: { children: React.ReactNode }) {
