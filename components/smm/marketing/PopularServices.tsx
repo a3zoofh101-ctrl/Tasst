@@ -44,7 +44,10 @@ export async function PopularServices() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((s) => (
-            <div key={s.id} className="flex items-center gap-3 rounded-2xl border border-border2 bg-surface p-4">
+            <div
+              key={s.id}
+              className="smm-glass flex items-center gap-3 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow"
+            >
               <PlatformIcon slug={s.platform.slug} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold text-fg">{s.name}</p>

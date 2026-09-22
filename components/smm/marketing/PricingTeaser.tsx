@@ -22,8 +22,11 @@ export async function PricingTeaser() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
           {services.map((s) => (
-            <div key={s.id} className="rounded-2xl border border-border2 bg-surface p-6 text-center">
-              <p className="text-xs font-semibold text-brand-600">{s.platform.name}</p>
+            <div
+              key={s.id}
+              className="smm-glass rounded-2xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glow"
+            >
+              <p className="text-xs font-semibold text-brand-600 dark:text-brand-300">{s.platform.name}</p>
               <h3 className="mt-1 font-bold text-fg">{s.name}</h3>
               <p className="mt-3 text-3xl font-extrabold text-fg">
                 {s.pricePer1000.toFixed(2)} <span className="text-sm font-medium text-muted">ر.س / 1000</span>
