@@ -140,3 +140,28 @@ export async function toggleServiceActiveAction(serviceId: string): Promise<Acti
   revalidatePath("/dashboard/services");
   return { ok: true };
 }
+
+export async function deleteServiceAction(serviceId: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const service = await prisma.service.findUnique({ where: { id: serviceId } });
+  if (!service) return { ok: false, error: "الخدمة غير موجودة" };
+
+  const orderCount = await prisma.order.count({ where: { serviceId } });
+  if (orderCount > 0) {
+    return { ok: false, error: "لا يمكن حذف هذه الخدمة لوجود طلبات مرتبطة بها — استخدم زر الإخفاء بدلاً من ذلك" };
+  }
+
+  await prisma.$transaction([
+    prisma.service.delete({ where: { id: serviceId } }),
+    // Clear the imported flag so the underlying provider service reappears
+    // in the pending-import list, allowing a clean re-import.
+    ...(service.providerServiceId
+      ? [prisma.providerService.update({ where: { id: service.providerServiceId }, data: { imported: false } })]
+      : [])
+  ]);
+
+  await logAudit({ actorId: admin.id, action: "SERVICE_DELETED", entityType: "Service", entityId: serviceId });
+  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/services");
+  return { ok: true };
+}

@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/smm/ui/States";
 import { ImportServiceDialog } from "@/components/smm/admin/ImportServiceDialog";
 import { EditServiceDialog } from "@/components/smm/admin/EditServiceDialog";
 import { ToggleServiceButton } from "@/components/smm/admin/ToggleServiceButton";
+import { DeleteServiceButton } from "@/components/smm/admin/DeleteServiceButton";
 import { ReclassifyPlatformsButton } from "@/components/smm/admin/ReclassifyPlatformsButton";
 
 // Reclassifying scans every managed service — give the server action more
@@ -128,6 +129,7 @@ export default async function AdminServicesPage() {
                             }}
                           />
                           <ToggleServiceButton serviceId={s.id} active={s.active} />
+                          <DeleteServiceButton serviceId={s.id} serviceName={s.name} />
                         </div>
                       </Td>
                     </Tr>
