@@ -9,6 +9,7 @@ import { EditServiceDialog } from "@/components/smm/admin/EditServiceDialog";
 import { ToggleServiceButton } from "@/components/smm/admin/ToggleServiceButton";
 import { DeleteServiceButton } from "@/components/smm/admin/DeleteServiceButton";
 import { ReclassifyPlatformsButton } from "@/components/smm/admin/ReclassifyPlatformsButton";
+import { RollbackReclassifyButton } from "@/components/smm/admin/RollbackReclassifyButton";
 
 // Reclassifying scans every managed service — give the server action more
 // than the platform default before it's cut off on a large catalog.
@@ -28,7 +29,10 @@ export default async function AdminServicesPage() {
           <h1 className="text-2xl font-extrabold text-fg">الخدمات</h1>
           <p className="mt-1 text-sm text-muted">استورد الخدمات من المزودين وحدّد هامش الربح قبل تفعيلها للعملاء</p>
         </div>
-        <ReclassifyPlatformsButton />
+        <div className="flex flex-wrap gap-2">
+          <ReclassifyPlatformsButton />
+          <RollbackReclassifyButton />
+        </div>
       </div>
 
       <Card>

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { logAudit } from "@/lib/smm/audit";
-import { reclassifyServicePlatforms, type ReclassifyResult } from "@/lib/smm/catalog-import";
+import { reclassifyServicePlatforms, restoreServicePlatforms, type ReclassifyResult, type ReclassifySnapshotEntry } from "@/lib/smm/catalog-import";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -74,22 +74,66 @@ export async function toggleCategoryActiveAction(categoryId: string): Promise<Ac
 // One-click fix for a catalog imported before detectPlatform learned
 // Arabic keywords: everything landed under "أخرى" instead of its real
 // platform. Safe to re-run — a no-op once everything's already correct.
-export async function reclassifyPlatformsAction(): Promise<ActionResult & Partial<ReclassifyResult>> {
+//
+// The full per-service snapshot (previous platformId/categoryId) is kept
+// in the audit log, not sent back to the browser — a large catalog's
+// snapshot can run into the thousands of rows, and the client only needs
+// the summary counts for its toast. rollbackLastReclassifyAction reads it
+// back out to undo the move.
+export async function reclassifyPlatformsAction(): Promise<ActionResult & Partial<Omit<ReclassifyResult, "snapshot">>> {
   const admin = await requireAdmin();
 
-  const result = await reclassifyServicePlatforms(prisma);
+  const { snapshot, ...summary } = await reclassifyServicePlatforms(prisma);
 
   await logAudit({
     actorId: admin.id,
     action: "SERVICES_RECLASSIFIED",
     entityType: "Service",
     entityId: "bulk",
-    metadata: result
+    metadata: { ...summary, snapshot }
   });
 
   revalidatePath("/admin/services");
   revalidatePath("/dashboard/services");
   revalidatePath("/smm");
 
-  return { ok: true, ...result };
+  return { ok: true, ...summary };
+}
+
+// Undoes the most recent reclassifyPlatformsAction run, restoring every
+// moved service to its previous platform/category from the audit-log
+// snapshot. Only the latest run can be undone, and only once — this is a
+// safety net for a reclassify that produced unexpected groupings, not a
+// general multi-step undo history.
+export async function rollbackLastReclassifyAction(): Promise<ActionResult & { restored?: number }> {
+  const admin = await requireAdmin();
+
+  const last = await prisma.auditLog.findFirst({
+    where: { action: { in: ["SERVICES_RECLASSIFIED", "SERVICES_RECLASSIFY_ROLLED_BACK"] } },
+    orderBy: { createdAt: "desc" }
+  });
+  if (!last || last.action !== "SERVICES_RECLASSIFIED") {
+    return { ok: false, error: "لا يوجد إعادة تصنيف حديثة للتراجع عنها" };
+  }
+
+  const snapshot = (last.metadata as { snapshot?: ReclassifySnapshotEntry[] } | null)?.snapshot ?? [];
+  if (snapshot.length === 0) {
+    return { ok: false, error: "لا توجد خدمات تم نقلها في آخر عملية تصنيف" };
+  }
+
+  const { restored } = await restoreServicePlatforms(prisma, snapshot);
+
+  await logAudit({
+    actorId: admin.id,
+    action: "SERVICES_RECLASSIFY_ROLLED_BACK",
+    entityType: "AuditLog",
+    entityId: last.id,
+    metadata: { restored }
+  });
+
+  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/services");
+  revalidatePath("/smm");
+
+  return { ok: true, restored };
 }
