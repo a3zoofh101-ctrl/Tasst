@@ -1,5 +1,4 @@
 import { AdminSidebar } from "@/components/smm/admin/AdminSidebar";
-import { ADMIN_NAV } from "@/components/smm/admin/nav";
 import { NotificationBell, type NotificationDto } from "@/components/smm/dashboard/NotificationBell";
 import { UserMenu } from "@/components/smm/dashboard/UserMenu";
 import { ThemeToggle } from "@/components/smm/ui/ThemeToggle";
@@ -24,7 +23,7 @@ export function AdminShell({
       <div className="flex min-h-dvh flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border2 bg-surface/90 px-4 py-3 backdrop-blur sm:px-6">
           <div className="flex items-center gap-2">
-            <MobileDrawer navItems={ADMIN_NAV} name={name} email={email} logoSubtitle="إدارة" />
+            <MobileDrawer variant="admin" name={name} email={email} logoSubtitle="إدارة" />
             <span className="text-base font-extrabold text-fg lg:hidden">لوحة الإدارة</span>
           </div>
           <div className="flex items-center gap-1.5">

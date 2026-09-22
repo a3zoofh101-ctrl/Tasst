@@ -4,23 +4,29 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as RadixDialog from "@radix-ui/react-dialog";
-import { Menu, X, LogOut } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Menu, X, LogOut, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/smm/cn";
 import { formatMoney } from "@/lib/smm/money";
 import { Logo } from "@/components/smm/ui/Logo";
 import { logoutAction } from "@/lib/smm/actions/auth";
+import { DASHBOARD_NAV } from "@/components/smm/dashboard/nav";
+import { ADMIN_NAV } from "@/components/smm/admin/nav";
 
-export type DrawerNavItem = { href: string; label: string; icon: LucideIcon };
-
+// navItems is intentionally NOT a prop: its entries hold icon *component*
+// references, and passing those from a Server Component parent (both
+// DashboardShell and AdminShell render this) across the server/client
+// boundary breaks RSC serialization. Importing the nav lists here instead
+// keeps every icon reference on the client side.
 export function MobileDrawer({
-  navItems,
+  variant,
+  isAdmin,
   name,
   email,
   balance,
   logoSubtitle
 }: {
-  navItems: DrawerNavItem[];
+  variant: "dashboard" | "admin";
+  isAdmin?: boolean;
   name: string;
   email: string;
   balance?: string;
@@ -28,6 +34,13 @@ export function MobileDrawer({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  const navItems =
+    variant === "admin"
+      ? ADMIN_NAV
+      : isAdmin
+        ? [...DASHBOARD_NAV, { href: "/admin", label: "لوحة الإدارة", icon: ShieldCheck }]
+        : DASHBOARD_NAV;
 
   return (
     <RadixDialog.Root open={open} onOpenChange={setOpen}>
