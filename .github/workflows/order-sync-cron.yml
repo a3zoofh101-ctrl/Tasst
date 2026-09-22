@@ -1,0 +1,23 @@
+name: Sync order status
+
+# Vercel's Hobby plan only runs the crons.json job once a day, which is too
+# slow for keeping "processing" orders up to date. This workflow hits the
+# same endpoint on a tighter schedule for free, independent of the Vercel
+# plan. Requires an APP_URL and CRON_SECRET repository secret matching the
+# ones configured on the Vercel project.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/orders
+        run: |
+          curl -sf -X GET "${APP_URL%/}/api/cron/orders" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

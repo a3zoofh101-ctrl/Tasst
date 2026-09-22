@@ -37,6 +37,17 @@ export const forgotPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email("بريد إلكتروني غير صالح")
 });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "أدخل كلمة المرور الحالية"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string()
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "كلمتا المرور غير متطابقتين",
+    path: ["confirmPassword"]
+  });
+
 export const resetPasswordSchema = z
   .object({
     token: z.string().min(10),

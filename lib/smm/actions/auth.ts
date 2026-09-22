@@ -4,13 +4,14 @@ import { randomBytes, createHash } from "crypto";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/smm/db/prisma";
 import { hashPassword, verifyPassword } from "@/lib/smm/auth/password";
-import { createSession, destroySession } from "@/lib/smm/auth/session";
+import { createSession, destroySession, requireUser, getSession } from "@/lib/smm/auth/session";
 import { logAudit } from "@/lib/smm/audit";
 import {
   registerSchema,
   loginSchema,
   forgotPasswordSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
+  changePasswordSchema
 } from "@/lib/smm/validation/auth";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -150,6 +151,41 @@ export async function resetPasswordAction(formData: FormData): Promise<ActionRes
   ]);
 
   await logAudit({ actorId: record.userId, action: "PASSWORD_RESET_COMPLETED", entityType: "User", entityId: record.userId });
+
+  return { ok: true };
+}
+
+// Self-service password change for a logged-in user (any role). Revokes
+// every other session so a compromised device is logged out immediately.
+export async function changePasswordAction(formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+
+  const parsed = changePasswordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+    confirmPassword: formData.get("confirmPassword")
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
+  }
+
+  const valid = await verifyPassword(parsed.data.currentPassword, user.passwordHash);
+  if (!valid) {
+    return { ok: false, error: "كلمة المرور الحالية غير صحيحة" };
+  }
+
+  const passwordHash = await hashPassword(parsed.data.newPassword);
+  const session = await getSession();
+
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.session.updateMany({
+      where: { userId: user.id, id: { not: session?.sessionId }, revoked: false },
+      data: { revoked: true }
+    })
+  ]);
+
+  await logAudit({ actorId: user.id, action: "PASSWORD_CHANGED", entityType: "User", entityId: user.id });
 
   return { ok: true };
 }
