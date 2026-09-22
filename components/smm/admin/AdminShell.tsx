@@ -20,7 +20,7 @@ export function AdminShell({
   return (
     <div className="flex min-h-dvh bg-canvas">
       <AdminSidebar />
-      <div className="flex min-h-dvh flex-1 flex-col">
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border2 bg-surface/90 px-4 py-3 backdrop-blur sm:px-6">
           <div className="flex items-center gap-2">
             <MobileDrawer variant="admin" name={name} email={email} logoSubtitle="إدارة" />
