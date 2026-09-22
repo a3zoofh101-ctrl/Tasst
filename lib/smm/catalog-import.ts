@@ -239,24 +239,39 @@ export async function bulkImportProviderCatalog(params: {
 }
 
 export type ReclassifySnapshotEntry = { serviceId: string; platformId: string; categoryId: string };
-export type ReclassifyResult = { moved: number; total: number; snapshot: ReclassifySnapshotEntry[] };
+export type ReclassifyPageResult = { moved: number; scanned: number; nextCursor: string | null; snapshot: ReclassifySnapshotEntry[] };
+
+const DEFAULT_RECLASSIFY_PAGE_SIZE = 250;
 
 /**
- * Re-runs detectPlatform against every already-imported Service (using its
- * name + the provider's original category text) and moves it to the
+ * Re-runs detectPlatform against ONE PAGE of already-imported Service rows
+ * (id-cursor paginated, ordered by id) and moves each to the
  * platform/category that now matches — for catalogs imported before
  * detectPlatform knew Arabic keywords, which all landed under "أخرى".
- * Grouped into one updateMany per (platform, category) pair rather than a
- * per-service update, so this stays a handful of queries regardless of
- * how many thousand services need moving.
+ * Grouped into one updateMany per (platform, category) pair within the
+ * page rather than a per-service update.
+ *
+ * Bounded to one page at a time (not the whole catalog in one call) so a
+ * catalog of several thousand services — each move needs its own upsert +
+ * update round-trips — can't run past a serverless function's execution
+ * limit (this hit exactly that on a ~5,000-service production catalog: a
+ * single-call full scan reliably exceeded Vercel's Hobby-plan duration cap
+ * and came back as a 500). The caller drives the pagination loop, calling
+ * again with the returned `nextCursor` until it's null.
  *
  * Returns each moved service's PREVIOUS (platformId, categoryId) as
- * `snapshot`, so the caller can persist it (e.g. in an audit log) and
- * offer a real one-click rollback rather than just recommending an
- * external DB backup.
+ * `snapshot`, so the caller can accumulate it across pages and persist the
+ * full run's snapshot (e.g. in an audit log) for a real one-click rollback.
  */
-export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<ReclassifyResult> {
+export async function reclassifyServicePlatformsPage(
+  prisma: PrismaClient,
+  opts: { cursor?: string | null; pageSize?: number } = {}
+): Promise<ReclassifyPageResult> {
+  const pageSize = opts.pageSize ?? DEFAULT_RECLASSIFY_PAGE_SIZE;
   const services = await prisma.service.findMany({
+    where: opts.cursor ? { id: { gt: opts.cursor } } : undefined,
+    orderBy: { id: "asc" },
+    take: pageSize,
     select: {
       id: true,
       name: true,
@@ -266,7 +281,7 @@ export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<
       providerService: { select: { providerCategory: true } }
     }
   });
-  if (services.length === 0) return { moved: 0, total: 0, snapshot: [] };
+  if (services.length === 0) return { moved: 0, scanned: 0, nextCursor: null, snapshot: [] };
 
   const resolved = services.map((s) => {
     const text = `${s.providerService?.providerCategory ?? ""} ${s.name} ${s.description ?? ""}`;
@@ -333,14 +348,16 @@ export async function reclassifyServicePlatforms(prisma: PrismaClient): Promise<
     }
   }
 
-  return { moved: snapshot.length, total: services.length, snapshot };
+  const nextCursor = services.length === pageSize ? services[services.length - 1].id : null;
+  return { moved: snapshot.length, scanned: services.length, nextCursor, snapshot };
 }
 
 /**
- * Restores every service in `snapshot` to the (platformId, categoryId) it
- * had before a reclassifyServicePlatforms() run — the undo half of the
- * one-click reclassify action. Grouped the same way as the forward move,
- * so it stays a handful of queries regardless of catalog size.
+ * Restores every service in `snapshot` (accumulated across one or more
+ * reclassifyServicePlatformsPage() calls) to the (platformId, categoryId)
+ * it had before — the undo half of the reclassify action. Grouped the
+ * same way as the forward move, so it stays a handful of queries
+ * regardless of catalog size.
  */
 export async function restoreServicePlatforms(prisma: PrismaClient, snapshot: ReclassifySnapshotEntry[]): Promise<{ restored: number }> {
   const groups = new Map<string, { platformId: string; categoryId: string; ids: string[] }>();
