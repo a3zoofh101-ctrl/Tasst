@@ -23,7 +23,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         <ArrowRight className="size-4" />
         العودة للدعم الفني
       </Link>
-      <Card>
+      <Card glass>
         <CardContent>
           <TicketThread
             ticketId={ticket.id}

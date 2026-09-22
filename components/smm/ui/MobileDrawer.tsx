@@ -56,7 +56,10 @@ export function MobileDrawer({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-fadeIn lg:hidden" />
         <RadixDialog.Content
-          className="fixed inset-y-0 right-0 z-50 flex h-dvh w-[82%] max-w-[340px] flex-col bg-surface shadow-2xl outline-none data-[state=open]:animate-drawerIn data-[state=closed]:animate-drawerOut lg:hidden"
+          className={cn(
+            "fixed inset-y-0 right-0 z-50 flex h-dvh w-[82%] max-w-[340px] flex-col shadow-2xl outline-none data-[state=open]:animate-drawerIn data-[state=closed]:animate-drawerOut lg:hidden",
+            variant === "dashboard" ? "smm-glass" : "bg-surface"
+          )}
         >
           <RadixDialog.Title className="sr-only">القائمة الرئيسية</RadixDialog.Title>
           <RadixDialog.Description className="sr-only">التنقل بين صفحات الحساب</RadixDialog.Description>

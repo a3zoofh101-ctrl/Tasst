@@ -12,7 +12,7 @@ export function Toaster() {
       theme={resolvedTheme === "dark" ? "dark" : "light"}
       toastOptions={{
         classNames: {
-          toast: "font-arabic"
+          toast: "font-arabic smm-glass !shadow-xl"
         }
       }}
     />

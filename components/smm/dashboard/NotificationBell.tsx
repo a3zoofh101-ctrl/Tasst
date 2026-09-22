@@ -39,7 +39,7 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-80 rounded-2xl border border-border2 bg-surface p-2 shadow-xl"
+          className="smm-glass z-50 w-80 rounded-2xl p-2 shadow-xl"
         >
           <div className="flex items-center justify-between px-2 py-1.5">
             <p className="text-sm font-bold text-fg">الإشعارات</p>
