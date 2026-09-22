@@ -7,10 +7,27 @@ import { formatNumber } from "@/lib/smm/money";
 import { Input } from "@/components/smm/ui/Input";
 import type { ServiceOption } from "@/components/smm/dashboard/NewOrderWizard";
 
+// Converts a free-text averageTime ("0-6 ساعات", "فوري", "1-2 يوم", ...) into
+// a rough hours estimate so services can be ranked fastest-first when their
+// price ties. Unparseable/missing values sink to the end of their price tier.
+function estimatedHours(averageTime: string | null): number {
+  if (!averageTime) return Infinity;
+  if (averageTime.includes("فوري")) return 0;
+  const numbers = averageTime.match(/\d+(\.\d+)?/g);
+  if (!numbers) return Infinity;
+  const upperBound = Number(numbers[numbers.length - 1]);
+  if (averageTime.includes("دقيق")) return upperBound / 60;
+  if (averageTime.includes("أسبوع") || averageTime.includes("اسبوع")) return upperBound * 24 * 7;
+  if (averageTime.includes("يوم")) return upperBound * 24;
+  return upperBound;
+}
+
 // Replaces a plain <select> (which can't show more than one line of plain
 // text per option) with a searchable, scrollable list of service "cards" —
 // search matches the name or the provider's own service id directly, so
-// pasting a known id (e.g. "7302") jumps straight to it.
+// pasting a known id (e.g. "7302") jumps straight to it. Sorted cheapest
+// first, then fastest for services tied on price, matching the ordering
+// requested for the services system.
 export function ServicePicker({
   services,
   value,
@@ -27,7 +44,11 @@ export function ServicePicker({
     const list = !q
       ? services
       : services.filter((s) => s.name.toLowerCase().includes(q) || s.providerRefId.toLowerCase().includes(q));
-    return [...list].sort((a, b) => Number(a.pricePer1000) - Number(b.pricePer1000));
+    return [...list].sort((a, b) => {
+      const priceDiff = Number(a.pricePer1000) - Number(b.pricePer1000);
+      if (priceDiff !== 0) return priceDiff;
+      return estimatedHours(a.averageTime) - estimatedHours(b.averageTime);
+    });
   }, [services, query]);
 
   return (
