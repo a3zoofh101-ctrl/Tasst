@@ -39,7 +39,7 @@ export default async function WalletPage() {
         <p className="mt-1 text-sm text-muted">تابع رصيدك وسجل عملياتك المالية</p>
       </div>
 
-      <Card>
+      <Card glass>
         <CardContent className="flex flex-col items-center gap-4 py-8 text-center sm:flex-row sm:justify-between sm:text-right">
           <div>
             <p className="text-sm text-muted">الرصيد الحالي</p>
@@ -49,7 +49,7 @@ export default async function WalletPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card glass>
         <CardContent className="!p-0">
           <h2 className="p-5 pb-3 font-bold text-fg">سجل العمليات</h2>
           {transactions.length === 0 ? (

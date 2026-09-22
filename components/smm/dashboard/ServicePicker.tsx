@@ -75,11 +75,11 @@ export function ServicePicker({
               disabled={!s.available}
               onClick={() => onChange(s.id)}
               className={cn(
-                "w-full rounded-xl border p-3 text-right transition-colors",
+                "w-full rounded-xl border p-3 text-right transition-all",
                 !s.available
                   ? "cursor-not-allowed border-border2 bg-surface2/60 opacity-60"
                   : selected
-                    ? "border-brand-500 bg-brand-50 dark:bg-brand-900/30"
+                    ? "border-brand-500 bg-brand-50 shadow-glow dark:bg-brand-900/30"
                     : "border-border2 bg-surface hover:border-brand-300 dark:hover:border-brand-700"
               )}
             >

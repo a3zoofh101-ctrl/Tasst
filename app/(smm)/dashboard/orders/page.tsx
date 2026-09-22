@@ -27,7 +27,7 @@ export default async function OrdersPage() {
         <p className="mt-1 text-sm text-muted">جميع طلباتك مع تفاصيل الحالة والتنفيذ</p>
       </div>
 
-      <Card>
+      <Card glass>
         <CardContent className="!p-0">
           {orders.length === 0 ? (
             <div className="p-5">
