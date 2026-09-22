@@ -1,14 +1,10 @@
-import Link from "next/link";
 import { requireUser } from "@/lib/smm/auth/session";
 import { prisma } from "@/lib/smm/db/prisma";
 import { formatMoney, formatNumber } from "@/lib/smm/money";
 import { formatOrderNumber } from "@/lib/smm/orders";
 import { formatDate } from "@/lib/smm/date";
 import { Card, CardContent } from "@/components/smm/ui/Card";
-import { OrderStatusBadge } from "@/components/smm/ui/Badge";
-import { EmptyState } from "@/components/smm/ui/States";
-import { Button } from "@/components/smm/ui/Button";
-import { Table, Thead, Tr, Th, Td } from "@/components/smm/ui/Table";
+import { OrdersTable, type OrderRow } from "@/components/smm/dashboard/OrdersTable";
 
 export default async function OrdersPage() {
   const user = await requireUser();
@@ -20,6 +16,18 @@ export default async function OrdersPage() {
     include: { service: true }
   });
 
+  const rows: OrderRow[] = orders.map((o) => ({
+    id: o.id,
+    orderNumber: formatOrderNumber(o.seq),
+    serviceName: o.service.name,
+    link: o.link,
+    quantity: formatNumber(o.quantity),
+    price: formatMoney(o.sellingPrice),
+    remains: o.remains != null ? formatNumber(o.remains) : "—",
+    status: o.status,
+    date: formatDate(o.createdAt)
+  }));
+
   return (
     <div className="space-y-5">
       <div>
@@ -29,56 +37,7 @@ export default async function OrdersPage() {
 
       <Card glass>
         <CardContent className="!p-0">
-          {orders.length === 0 ? (
-            <div className="p-5">
-              <EmptyState
-                title="لا توجد طلبات بعد"
-                description="ابدأ بطلب أول خدمة لك الآن"
-                action={
-                  <Link href="/dashboard/new-order">
-                    <Button size="sm">طلب جديد</Button>
-                  </Link>
-                }
-              />
-            </div>
-          ) : (
-            <div className="p-5">
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>رقم الطلب</Th>
-                    <Th>الخدمة</Th>
-                    <Th>الرابط</Th>
-                    <Th>الكمية</Th>
-                    <Th>السعر</Th>
-                    <Th>المتبقي</Th>
-                    <Th>الحالة</Th>
-                    <Th>التاريخ</Th>
-                  </Tr>
-                </Thead>
-                <tbody>
-                  {orders.map((o) => (
-                    <Tr key={o.id}>
-                      <Td>
-                        <Link href={`/dashboard/orders/${o.id}`} className="font-semibold text-brand-600 hover:underline">
-                          {formatOrderNumber(o.seq)}
-                        </Link>
-                      </Td>
-                      <Td className="max-w-[180px] truncate">{o.service.name}</Td>
-                      <Td className="max-w-[160px] truncate text-xs text-muted">{o.link}</Td>
-                      <Td>{formatNumber(o.quantity)}</Td>
-                      <Td>{formatMoney(o.sellingPrice)}</Td>
-                      <Td>{o.remains != null ? formatNumber(o.remains) : "—"}</Td>
-                      <Td>
-                        <OrderStatusBadge status={o.status} />
-                      </Td>
-                      <Td className="text-xs text-muted">{formatDate(o.createdAt)}</Td>
-                    </Tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
+          <OrdersTable orders={rows} />
         </CardContent>
       </Card>
     </div>
