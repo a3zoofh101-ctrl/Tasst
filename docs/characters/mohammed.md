@@ -16,14 +16,14 @@ generation; the text below locks what the photo shows so prompts stay consistent
 | --- | --- |
 | Name | Mohammed (محمد) |
 | Nationality | Saudi |
-| Age | Early 30s |
-| Height / build | ~180 cm, broad sturdy build, strong shoulders |
+| Age | 34 |
+| Height / build | ~178 cm, medium build leaning slightly heavy, broad shoulders |
 | Face | Authentic Arabian features, strong straight nose, defined cheekbones |
 | Skin | Medium tan, warm olive undertone, natural texture |
 | Eyes | Dark brown, relaxed slightly half-lidded gaze |
 | Eyebrows | Thick, dark, natural |
-| Hair | Thick, slightly wavy black hair styled up and back with volume on top, short tapered sides — **no headwear** |
-| Beard | Short full black beard, thick prominent moustache, slightly fuller on the chin, clean cheek line |
+| Hair | Short black hair, neatly styled with a little volume on top and short tapered sides — **no headwear** |
+| Beard | Thick prominent black moustache with a light, short, neatly trimmed beard and a clean cheek line |
 | Default expression | Relaxed, confident, slight self-assured smirk |
 | Outfit | Crisp white Saudi thobe with a classic collar, silver pen in the chest pocket, chunky black wristwatch on the left wrist |
 
@@ -34,27 +34,27 @@ generation; the text below locks what the photo shows so prompts stay consistent
 ### Locked Identity Block (copy into every prompt)
 
 ```
-Mohammed, a Saudi man in his early 30s with authentic Arabian facial features,
-medium tan skin with warm olive undertones and natural skin texture, thick slightly
-wavy black hair styled up and back with volume on top and short tapered sides, no
-headwear, dark brown eyes with a relaxed half-lidded gaze, thick dark natural
-eyebrows, short full black beard with a thick prominent moustache and a slightly
-fuller chin, clean cheek line, broad sturdy build with strong shoulders, about
-180 cm tall, wearing a crisp white Saudi thobe with a classic collar and a silver
+Mohammed, a 34-year-old Saudi man with authentic Arabian facial features, medium
+tan skin with warm olive undertones and natural skin texture, short neatly styled
+black hair with a little volume on top and short tapered sides, no headwear, dark
+brown eyes with a relaxed half-lidded gaze, thick dark natural eyebrows, thick
+prominent black moustache with a light short neatly trimmed beard and a clean
+cheek line, medium build leaning slightly heavy with broad shoulders, about
+178 cm tall, wearing a crisp white Saudi thobe with a classic collar and a silver
 pen in the chest pocket, chunky black wristwatch on his left wrist
 ```
 
 Use the same **Style Block** and **Negative prompt** as Ziyad
 ([ziyad.md §1](./ziyad.md#style-block-copy-into-every-prompt)), but for Mohammed
-remove `long hair` from the negative prompt and add `shemagh, ghutra, headwear,
+remove `long hair` and `overweight` from the negative prompt and add `shemagh, ghutra, headwear,
 cap`.
 
 ---
 
 ## 2. Personality & performance
 
-- **Traits:** enthusiastic, proud, talkative, warm, a bit of a show-off, quick to
-  laugh — the energetic counterpart to Ziyad's calm.
+- **Traits:** enthusiastic, stubborn, confident, talkative, warm — gets fired up
+  fast whenever anyone criticises Ford. The energetic counterpart to Ziyad's calm.
 - **Expressions:** confident smirk, eyebrows up when excited, an easy laugh. More
   animated than Ziyad, but still realistic — no cartoonish faces.
 - **Gestures:** points at things, open arms when making a big point, leans back
@@ -81,7 +81,7 @@ smirk, relaxed body language, no theatrical over-acting
 Voice prompt:
 
 ```
-Medium-deep warm Saudi male voice, early 30s, Riyadh/Najdi accent, natural casual
+Medium-deep warm Saudi male voice, mid 30s, Riyadh/Najdi accent, natural casual
 Saudi Arabic dialect, lively slightly fast pace, enthusiastic and playful,
 conversational, no theatrical acting
 ```

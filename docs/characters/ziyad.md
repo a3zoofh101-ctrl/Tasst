@@ -63,7 +63,9 @@ headwear, all-white ghutra, turban, dirty or wrinkled thobe, watermark, text, lo
 
 ## 2. Personality & performance
 
-- **Traits:** calm, confident, mature, slightly serious, quick-witted, charismatic.
+- **Traits:** calm, confident, mature, slightly serious, quick-witted, dry and
+  sarcastic, charismatic.
+- **Dialogue:** prefers short replies — one dry line instead of a long argument.
 - **Energy:** low-key and grounded. He lets the line land instead of selling it.
 - **Expressions:** small and real — a slight smile, a raised eyebrow, a short
   knowing look. No exaggerated reactions.
