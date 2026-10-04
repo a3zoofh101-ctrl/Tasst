@@ -1,5 +1,7 @@
 # Ziyad (زياد) — Character Bible
 
+Arabic version: [`ziyad.ar.md`](./ziyad.ar.md).
+
 Use this sheet as the single source of truth whenever Ziyad appears in an image,
 video, or voice-over. Every prompt for Ziyad should start from the **Locked
 Identity Block** below, word for word. Only the scene, action, camera and
@@ -207,3 +209,107 @@ static tripod camera with a very slow push-in, soft key light from the left,
 - [ ] Average build, natural proportions, ~178 cm relative to surroundings
 - [ ] Calm, subtle expression and gestures
 - [ ] Voice: deep, calm, Najdi Saudi dialect, relaxed pace
+
+---
+
+## 6. More scene templates
+
+**Driving (car interior)**
+```
+[Locked Identity Block], sitting in the driver's seat of a modern car, one hand on
+the steering wheel, glancing at the camera with a slight knowing smile, Riyadh
+street softly blurred through the window, medium close-up from the passenger seat,
+35mm lens, natural daylight, [Style Block]
+```
+
+**Specialty café**
+```
+[Locked Identity Block], sitting at a minimalist specialty coffee shop table,
+holding a cup of coffee, phone on the table, relaxed posture, looking slightly
+off-camera, medium shot, 50mm lens, soft window light, warm neutral tones,
+[Style Block]
+```
+
+**Business meeting**
+```
+[Locked Identity Block], standing at the head of a modern meeting table, explaining
+calmly with a light open-palm gesture, colleagues softly out of focus in the
+foreground, medium shot, 50mm lens, clean soft office lighting, [Style Block]
+```
+
+**Ramadan night**
+```
+[Locked Identity Block], sitting on a rooftop at night decorated with warm lanterns,
+dates and Saudi coffee in front of him, calm peaceful expression, medium shot,
+85mm lens, warm lantern light with a soft blue night sky, [Style Block]
+```
+
+**Holding a product / phone (ads)**
+```
+[Locked Identity Block], holding [PRODUCT] at chest height and showing it to the
+camera, subtle confident smile, plain softly lit background, medium close-up,
+85mm lens, clean commercial lighting, product in sharp focus, [Style Block]
+```
+
+**Tight close-up (emotion shot)**
+```
+[Locked Identity Block], extreme close-up of his face, slight smile forming slowly,
+eyes looking directly into the lens, natural skin texture clearly visible,
+100mm macro-style framing, soft side light, [Style Block]
+```
+
+---
+
+## 7. Approved wardrobe variations
+
+The face, beard, hair, skin and build never change. Only use these outfit swaps
+when a scene needs it — replace the outfit part of the Locked Identity Block:
+
+| Variation | Replace outfit text with |
+| --- | --- |
+| Default | clean crisp white Saudi thobe, red-and-white shemagh with black agal |
+| Winter | white Saudi thobe with a dark brown wool bisht-style winter coat (farwa) over the shoulders, red-and-white shemagh with black agal |
+| Formal / occasion | white Saudi thobe with a black bisht with thin gold trim, red-and-white shemagh with black agal |
+| Casual (no headwear) | simple navy crew-neck t-shirt and beige chinos, short neatly styled black hair visible |
+
+---
+
+## 8. Short video scripts (Najdi dialect)
+
+Each script is 15–30 seconds. Use the talking-to-camera prompt (4.3) for every
+shot, with the scene swapped in.
+
+### Script 1 — Introduction (≈15s)
+
+| Shot | Scene | Line |
+| --- | --- | --- |
+| 1 | Office, medium close-up | «هلا والله. أنا زياد.» |
+| 2 | Same, slow push-in | «ما أحب اللف والدوران — أعطيك الزبدة على طول.» |
+| 3 | Tight close-up, slight smile | «تابعني، وبتشوف.» |
+
+### Script 2 — Product / service ad (≈25s)
+
+| Shot | Scene | Line |
+| --- | --- | --- |
+| 1 | Café, looking at phone, then up to camera | «تعرف وش أكثر شي يضيّع وقتك؟» |
+| 2 | Medium close-up | «إنك تدوّر على حل وأنت عندك [المنتج] قدامك.» |
+| 3 | Holding product to camera | «سهل، سريع، ويخلّص شغلك بدون وجع راس.» |
+| 4 | Close-up, calm nod | «جرّبه… وبعدين قلّي وش رايك.» |
+
+### Script 3 — Quick advice (≈20s)
+
+| Shot | Scene | Line |
+| --- | --- | --- |
+| 1 | Majlis, finjan in hand | «نصيحة من القلب.» |
+| 2 | Medium shot, light hand gesture | «لا تستعجل على النتيجة. الشغل الزين ياخذ وقته.» |
+| 3 | Sip of coffee, then look at camera | «بس الأهم… لا توقف.» |
+
+### Script 4 — Comedic beat (≈15s)
+
+| Shot | Scene | Line |
+| --- | --- | --- |
+| 1 | Car, phone ringing, he glances at it | (silence, slight raised eyebrow) |
+| 2 | Looks at camera, deadpan | «هذا ثالث مرة يتصل يقول "بس دقيقة".» |
+| 3 | Small smile, ignores the call | «أبشر… بس مو الحين.» |
+
+The humour comes from his calm, deadpan reaction — never from exaggerated faces.
